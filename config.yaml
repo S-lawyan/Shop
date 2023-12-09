@@ -5,8 +5,13 @@ bot:
   channel_id: -1001901707923
 
 db:
-  db_host: 192.168.197.128
+#  db_host: leeskbagenesh.beget.app
+#  db_port: 3306
+#  db_user: air_chan
+#  db_pass: n88wjH2mVpl%
+#  db_name: air_chan
+  db_host: "192.168.197.128"
   db_port: 3306
-  db_user: root
-  db_pass: 321
-  db_name: warehouse
+  db_user: "root"
+  db_pass: "321"
+  db_name: "warehouse"

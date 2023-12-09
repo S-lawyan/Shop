@@ -51,7 +51,9 @@ def load_config(config_path: str) -> Settings:
 
 
 # Получаю директорию бота
-PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+BOT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Получаю директорию проекта
+PROJECT_DIR = os.path.dirname(BOT_DIR)
 # Подгружаю конфиги и запускаю бота
 config: Settings = load_config(config_path=os.path.join(PROJECT_DIR, "config.yaml"))
 

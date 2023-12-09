@@ -1,0 +1,38 @@
+2023-12-09 19:43:50.280 | ERROR    | database.mysqldb:create_pool:28 - Ошибка при подключении к БД: (2003, "Can't connect to MySQL server on '192.168.197.128'")
+2023-12-09 19:44:59.334 | ERROR    | database.mysqldb:create_pool:28 - Ошибка при подключении к БД: (2003, "Can't connect to MySQL server on '192.168.197.128'")
+2023-12-09 19:47:28.537 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 19:51:28.704 | ERROR    | database.mysqldb:create_pool:28 - Ошибка при подключении к БД: (2003, "Can't connect to MySQL server on '192.168.197.128'")
+2023-12-09 19:56:58.560 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 20:04:41.452 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 20:13:15.799 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 20:14:01.322 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 20:22:21.330 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 20:22:34.219 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 20:23:00.902 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 20:28:07.798 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 20:28:08.289 | INFO     | bot.service:start_bot:17 - The bot is running!
+2023-12-09 20:33:03.487 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 20:34:37.160 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 20:34:37.568 | INFO     | bot.service:start_bot:17 - The bot is running!
+2023-12-09 20:40:22.300 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 20:40:27.416 | INFO     | bot.service:start_bot:21 - The bot is running!
+2023-12-09 21:29:26.140 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 21:29:26.581 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-09 21:30:40.302 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 21:30:40.673 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-09 23:04:19.357 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 23:04:19.888 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-09 23:05:29.982 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 23:05:30.407 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-09 23:08:11.228 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 23:08:11.611 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-09 23:10:56.472 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 23:10:56.813 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-09 23:11:39.023 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 23:11:40.634 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-09 23:13:23.542 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 23:13:23.897 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-09 23:14:14.825 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 23:14:15.228 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-09 23:14:27.144 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-09 23:14:27.474 | INFO     | bot.service:start_bot:18 - The bot is running!
