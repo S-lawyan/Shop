@@ -1,0 +1,12 @@
+bot:
+  # client-token
+  bot_token: 5916203690:AAE9AX2zGXy-lnJ6uKsgXYLGt4heqd1J3fs
+  # client-channel-id
+  channel_id: -1001901707923
+
+db:
+  db_host: 192.168.197.128
+  db_port: 3306
+  db_user: root
+  db_pass: 321
+  db_name: warehouse
