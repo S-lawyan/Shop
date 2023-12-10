@@ -38,5 +38,50 @@ class DataBaseService:
         self.db_pool.close()
         await self.db_pool.wait_closed()
 
+    async def save_trader(self, tg_id: int, trader_name: str, fio: str) -> None:
+        try:
+            query = f"""
+            INSERT INTO Traders
+            (tg_id, trader_name, fio) 
+            VALUES 
+            ({tg_id}, '{trader_name}', '{fio}')
+            """
+            await self.execute_query(query=query)
+            logger.info(f"Добавлен новый трейдер: {trader_name}, {fio}, {tg_id}")
+        except Exception as exc:
+            logger.error(f"Ошибка при добавлении трейдера : {exc}")
 
-database = DataBaseService(config)
+    async def check_trader(self, tg_id: int):
+        try:
+            query = f"SELECT * FROM Traders WHERE tg_id = {tg_id}"
+            result = await self.execute_query(query=query)
+            if len(result) == 0:
+                return False
+            else:
+                return True
+        except Exception as exc:
+            logger.error(f"Ошибка при : {exc}")
+
+    async def check_shop_name(self, shop_name):
+        try:
+            query = f"SELECT * FROM Traders WHERE trader_name = '{shop_name}'"
+            result = await self.execute_query(query=query)
+            if len(result) == 0:
+                return False
+            else:
+                return True
+        except Exception as exc:
+            logger.error(f"Ошибка при : {exc}")
+
+
+
+
+db = DataBaseService(config)
+
+# try:
+#     query = f"""
+#
+#     """
+#     await self.execute_query(query=query)
+# except Exception as exc:
+#     logger.error(f"Ошибка при : {exc}")

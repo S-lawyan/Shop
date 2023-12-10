@@ -3,7 +3,7 @@ import asyncio
 from loguru import logger
 from bot.service import BotService
 from config import config
-from database.mysqldb import database
+from database.mysqldb import db
 
 
 async def main():
@@ -15,12 +15,12 @@ async def main():
         level="DEBUG",
     )
     try:
-        await database.create_pool()
+        await db.create_pool()
         bot = BotService(config)
         await bot.start_bot()
     finally:
         await bot.stop_bot()
-        await database.close()
+        await db.close()
 
 
 if __name__ == "__main__":
