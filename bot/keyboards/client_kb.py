@@ -13,6 +13,8 @@ delete_product = InlineKeyboardButton(text="Удалить позицию ➖", 
 btn_help = InlineKeyboardButton(text="Помощь 🆘", callback_data='help')
 admin_panel_main.add(product_list).add(add_product).add(delete_product).add(btn_help)
 
+kb_cancel = InlineKeyboardMarkup().add(InlineKeyboardButton(text="Отмена", callback_data='cancel'))
+
 # btn_add = InlineKeyboardButton(text="Добавить позицию", callback_data='add_position')
 # btn_cancel = InlineKeyboardButton(text="Отмена", callback_data='cancel')
 # btn_password = InlineKeyboardButton(text="Ввести пароль", callback_data='password')

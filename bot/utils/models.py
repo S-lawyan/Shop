@@ -4,8 +4,9 @@ from datetime import datetime
 
 
 # @dataclass(frozen=True, kw_only=True)
-class Trader:
-    shop_name: str
-    fio: str
-    tg_id: int
+class Product:
+    product_name: str
+    price: float
+    count: int | None
+
 
