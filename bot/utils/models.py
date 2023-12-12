@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 from datetime import datetime
-# from pydantic import BaseModel
+from typing import Optional
+
+from pydantic import BaseModel
 
 
-# @dataclass(frozen=True, kw_only=True)
+@dataclass(kw_only=True)
 class Product:
     product_name: str
     price: float
-    count: int | None
-
-
+    quantity: int | None
+    article: int
+    trader_id: int

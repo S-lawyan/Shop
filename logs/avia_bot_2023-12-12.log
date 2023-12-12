@@ -1,0 +1,47 @@
+2023-12-12 19:05:05.778 | ERROR    | database.mysqldb:create_pool:28 - Ошибка при подключении к БД: (2003, "Can't connect to MySQL server on '192.168.197.128'")
+2023-12-12 19:05:06.285 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-12 19:09:41.241 | ERROR    | database.mysqldb:create_pool:28 - Ошибка при подключении к БД: 'cryptography' package is required for sha256_password or caching_sha2_password auth methods
+2023-12-12 19:09:41.844 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-12 19:10:04.438 | ERROR    | database.mysqldb:create_pool:28 - Ошибка при подключении к БД: 'cryptography' package is required for sha256_password or caching_sha2_password auth methods
+2023-12-12 19:10:04.815 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-12 19:10:24.339 | ERROR    | database.mysqldb:check_trader:63 - Ошибка при : 'NoneType' object has no attribute 'acquire'
+2023-12-12 19:12:45.916 | ERROR    | database.mysqldb:create_pool:28 - Ошибка при подключении к БД: 'NoneType' object has no attribute 'db'
+2023-12-12 19:13:07.654 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-12 19:13:08.242 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-12 19:15:01.861 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-12 19:15:02.362 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-12 19:17:54.888 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-12 19:17:55.379 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-12 19:44:02.936 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-12 19:44:03.353 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-12 20:25:59.351 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-12 20:25:59.719 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-12 20:35:59.419 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-12 20:35:59.921 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-12 20:37:05.455 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-12 20:37:06.023 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-12 20:39:17.490 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-12 20:39:17.941 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-12 20:39:49.492 | INFO     | database.mysqldb:create_pool:26 - Pool was created successfully!
+2023-12-12 20:39:49.884 | INFO     | bot.service:start_bot:18 - The bot is running!
+2023-12-12 22:07:10.733 | INFO     | database.mysqldb:create_pool:27 - Pool was created successfully!
+2023-12-12 22:07:12.341 | INFO     | bot.service:start_bot:19 - The bot is running!
+2023-12-12 22:08:30.356 | INFO     | database.mysqldb:create_pool:27 - Pool was created successfully!
+2023-12-12 22:08:30.947 | INFO     | bot.service:start_bot:19 - The bot is running!
+2023-12-12 22:09:10.796 | INFO     | database.mysqldb:create_pool:27 - Pool was created successfully!
+2023-12-12 22:09:11.550 | INFO     | bot.service:start_bot:19 - The bot is running!
+2023-12-12 22:09:19.299 | INFO     | database.mysqldb:create_pool:27 - Pool was created successfully!
+2023-12-12 22:09:22.569 | INFO     | bot.service:start_bot:19 - The bot is running!
+2023-12-12 22:28:19.865 | INFO     | database.mysqldb:create_pool:27 - Pool was created successfully!
+2023-12-12 22:28:20.317 | INFO     | bot.service:start_bot:19 - The bot is running!
+2023-12-12 22:28:26.604 | ERROR    | database.mysqldb:get_trader_products:111 - Ошибка при получении товаров продавца : (1241, 'Operand should contain 1 column(s)')
+2023-12-12 22:28:38.381 | INFO     | database.mysqldb:create_pool:27 - Pool was created successfully!
+2023-12-12 22:28:38.863 | INFO     | bot.service:start_bot:19 - The bot is running!
+2023-12-12 22:29:57.836 | INFO     | database.mysqldb:create_pool:27 - Pool was created successfully!
+2023-12-12 22:29:58.254 | INFO     | bot.service:start_bot:19 - The bot is running!
+2023-12-12 22:33:45.774 | INFO     | database.mysqldb:create_pool:27 - Pool was created successfully!
+2023-12-12 22:33:47.235 | INFO     | bot.service:start_bot:19 - The bot is running!
+2023-12-12 22:34:24.933 | INFO     | database.mysqldb:create_pool:27 - Pool was created successfully!
+2023-12-12 22:34:25.608 | INFO     | bot.service:start_bot:19 - The bot is running!
+2023-12-12 22:36:19.379 | INFO     | database.mysqldb:create_pool:27 - Pool was created successfully!
+2023-12-12 22:36:20.544 | INFO     | bot.service:start_bot:19 - The bot is running!

@@ -3,7 +3,7 @@ from aiogram.dispatcher import Dispatcher
 from aiogram import Bot, types
 from loguru import logger
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from bot.heandlers import client, admin
+from bot.heandlers import client, admin, admin_panel
 
 
 class BotService:
@@ -15,6 +15,7 @@ class BotService:
         await self.dp.skip_updates()
         # admin.register_handlers_admin(self.dp)
         client.register_handlers_client(self.dp)
+        admin_panel.register_handlers_admin_panel(self.dp)
         logger.info("The bot is running!")
         await self.dp.start_polling(self.bot)
 

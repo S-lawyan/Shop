@@ -4,6 +4,7 @@ from bot.config import config
 from loguru import logger
 from datetime import datetime
 from bot.utils.exceptions import ErrorAddingTrader
+from bot.utils.models import Product
 
 
 class DataBaseService:
@@ -60,7 +61,7 @@ class DataBaseService:
             else:
                 return True
         except Exception as exc:
-            logger.error(f"Ошибка при : {exc}")
+            logger.error(f"Ошибка при проверке дубликата пользователя : {exc}")
 
     async def check_shop_name(self, shop_name):
         try:
@@ -71,9 +72,62 @@ class DataBaseService:
             else:
                 return True
         except Exception as exc:
-            logger.error(f"Ошибка при : {exc}")
+            logger.error(f"Ошибка при проверке дубликата названия магазина : {exc}")
+
+    async def check_unique_article(self, article: int):
+        try:
+            query = f"""SELECT * FROM Products WHERE article={article} ORDER BY article ASC;"""
+            result = await self.execute_query(query=query)
+            if len(result) == 0:
+                return False
+            else:
+                return True
+        except Exception as exc:
+            logger.error(f"Ошибка при артикула : {exc}")
+
+    async def save_product(self, product: Product):
+        try:
+            query = f"""
+            INSERT INTO `Products`(`product_name`, `price`, `quantity_product`, `article`, `trader_id`) 
+            VALUES 
+            ('{product.product_name}', 
+            {product.price}, 
+            {product.quantity}, 
+            {product.article}, 
+            {product.trader_id},
+            )
+            """
+            await self.execute_query(query=query)
+        except Exception as exc:
+            logger.error(f"Ошибка при добавлении товара : {exc}")
+
+    async def get_trader_products(self, trader_id: int):
+        trader_id = 514665694
+        try:
+            query = f""" SELECT product_name, price, quantity_product, article, trader_id FROM Products WHERE trader_id={trader_id} """
+            result = list(await self.execute_query(query=query))
+            return await pars_products(result)
+        except Exception as exc:
+            logger.error(f"Ошибка при получении товаров продавца : {exc}")
 
 
+async def pars_products(result: list[tuple]) -> list[Product]:
+    return [pars_product(product) for product in result]
+
+
+def pars_product(product: tuple) -> Product:
+    name = str(product[0])
+    price = float(product[1])
+    quantity = int(product[2])
+    article = int(product[3])
+    trader_id = int(product[4])
+    return Product(
+        product_name=name,
+        price=price,
+        quantity=quantity,
+        article=article,
+        trader_id=trader_id
+    )
 
 
 db = DataBaseService(config)

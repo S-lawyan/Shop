@@ -3,7 +3,6 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from bot.glossaries.glossary import glossary
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from bot.utils.models import Product
 from bot.keyboards.client_kb import *
 from database.mysqldb import db
 from bot.utils import utilities as utl
@@ -12,10 +11,7 @@ from bot.utils import utilities as utl
 class TraderStates(StatesGroup):
     get_shop_name = State()
     get_fio = State()
-    # manage products list
-    get_product_name = State()
-    get_price = State()
-    get_quantity = State()
+
 
 
 # ================= БЛОК ОСНОВНЫХ КОМАНД БОТА ==============================
@@ -71,28 +67,6 @@ async def get_fio_to_tg_id(message: types.Message, state: FSMContext) -> None:
         await message.answer(text=glossary.get_phrase("bad_fio"))
 
 
-# ================= ПАНЕЛЬ АДМИНИСТРАТОРА ==============================
-
-async def show_admin_panel(call: types.CallbackQuery, state: FSMContext) -> None:
-    await call.message.answer(text="Панель администратора", reply_markup=admin_panel_main)
-
-
-async def add_product(call: types.CallbackQuery, state: FSMContext):
-    await call.message.answer(text=glossary.get_phrase("get_product_name"), reply_markup=kb_cancel)
-    await TraderStates.get_product_name.set()
-
-
-async def product_name_to_price(message: types.Message, state: FSMContext):
-    product = Product()
-    product.product_name = message.text
-    await message.answer(text=glossary.get_phrase("get_price"), reply_markup=kb_cancel)
-    await state.update_data(product=product)
-    await TraderStates.get_price.set()
-
-
-async def price_to_count(message: types.Message, state: FSMContext):
-    product = state.get_data() # Что получится?
-    product.price = float(message.text)
 
 
 
@@ -107,9 +81,4 @@ def register_handlers_client(dp: Dispatcher):
                                 state=TraderStates.get_shop_name)
     dp.register_message_handler(get_fio_to_tg_id, content_types=types.ContentType.TEXT,
                                 state=TraderStates.get_fio)
-    # Панель администратора
-    dp.register_callback_query_handler(show_admin_panel, text=["open_admin_panel"], state=None)
-    dp.register_callback_query_handler(add_product, text=["add_product"], state=None)
-    dp.register_message_handler(product_name_to_price, content_types=types.ContentType.TEXT,
-                                state=TraderStates.get_price)
 

@@ -24,4 +24,5 @@ async def main():
 
 
 if __name__ == "__main__":
+    # TODO попробовать сделать без асинхра и понять в чем разница
     asyncio.run(main())
