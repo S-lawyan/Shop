@@ -15,9 +15,10 @@ admin_panel_main.add(product_list).add(add_product).add(delete_product).add(btn_
 
 kb_cancel = InlineKeyboardMarkup().add(InlineKeyboardButton(text="Отмена", callback_data='cancel'))
 
-# btn_add = InlineKeyboardButton(text="Добавить позицию", callback_data='add_position')
-# btn_cancel = InlineKeyboardButton(text="Отмена", callback_data='cancel')
-# btn_password = InlineKeyboardButton(text="Ввести пароль", callback_data='password')
-#
-# kb_password = InlineKeyboardMarkup()
-# kb_password.add(btn_password)
+
+async def pagination(total_pages: int, page: int = 0):
+    return InlineKeyboardMarkup().row(
+        InlineKeyboardButton(text="⬅", callback_data=f"previous:{page}"),
+        InlineKeyboardButton(text=f"{page+1}/{total_pages}", callback_data="None"),
+        InlineKeyboardButton(text="➡", callback_data=f"next:{page}"),
+    )
