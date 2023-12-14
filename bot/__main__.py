@@ -8,7 +8,7 @@ from database.mysqldb import db
 
 async def main():
     logger.add(
-        "logs/avia_bot_{time:YYYY-MM-DD}.log",
+        "bot/logs/avia_bot_{time:YYYY-MM-DD}.log",
         rotation="1 day",
         retention="7 days",
         compression="zip",
