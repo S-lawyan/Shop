@@ -13,7 +13,6 @@ class TraderStates(StatesGroup):
     get_fio = State()
 
 
-
 # ================= БЛОК ОСНОВНЫХ КОМАНД БОТА ==============================
 async def command_start(message: types.Message) -> None:
     if await db.check_trader(tg_id=int(message.from_user.id)):

@@ -83,26 +83,35 @@ class DataBaseService:
             else:
                 return True
         except Exception as exc:
-            logger.error(f"Ошибка при артикула : {exc}")
+            logger.error(f"Ошибка проверки артикула : {exc}")
 
     async def save_product(self, product: Product):
         try:
             query = f"""
-            INSERT INTO `Products`(`product_name`, `price`, `quantity_product`, `article`, `trader_id`) 
+            INSERT INTO Products (product_name, price, quantity_product, article, trader_id) 
             VALUES 
             ('{product.product_name}', 
             {product.price}, 
-            {product.quantity}, 
+            {product.quantity if product.quantity is not None else "NULL"}, 
             {product.article}, 
-            {product.trader_id},
-            )
+            {product.trader_id})
             """
             await self.execute_query(query=query)
+            logger.error(f"""Добавлен товар : ('{product.product_name}', {product.price}, {product.quantity}, {product.article}, {product.trader_id})""")
         except Exception as exc:
             logger.error(f"Ошибка при добавлении товара : {exc}")
 
+    async def delete_product(self, trader_id: int, article: int):
+        try:
+            query = f"""
+                DELETE FROM Products WHERE article={article} and trader_id={trader_id}
+            """
+            await self.execute_query(query=query)
+            logger.error(f"Удален товар : {article} {trader_id}")
+        except Exception as exc:
+            logger.error(f"Ошибка при удалении товара : {exc}")
+
     async def get_trader_products(self, trader_id: int):
-        trader_id = 514665694
         try:
             query = f""" SELECT product_name, price, quantity_product, article, trader_id FROM Products WHERE trader_id={trader_id} """
             result = list(await self.execute_query(query=query))
@@ -116,18 +125,13 @@ async def pars_products(result: list[tuple]) -> list[Product]:
 
 
 def pars_product(product: tuple) -> Product:
-    name = str(product[0])
-    price = float(product[1])
-    quantity = int(product[2])
-    article = int(product[3])
-    trader_id = int(product[4])
-    return Product(
-        product_name=name,
-        price=price,
-        quantity=quantity,
-        article=article,
-        trader_id=trader_id
-    )
+    _product = Product()
+    _product.product_name = str(product[0])
+    _product.price = float(product[1])
+    _product.quantity = int(product[2])
+    _product.article = int(product[3])
+    _product.trader_id = int(product[4])
+    return _product
 
 
 db = DataBaseService(config)

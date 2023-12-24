@@ -1,14 +1,11 @@
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Optional
-
-from pydantic import BaseModel
 
 
 @dataclass(kw_only=True)
 class Product:
-    product_name: str
-    price: float
-    quantity: int | None
-    article: int
-    trader_id: int
+    def __init__(self):
+        self.product_name: str = ''
+        self.price: float = 0
+        self.quantity: int | None = 0
+        self.article: int = 0
+        self.trader_id: int = 0

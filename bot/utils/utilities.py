@@ -21,6 +21,20 @@ async def is_valid_name(name: str):
     return True
 
 
+async def is_valid_price(price: str):
+    # symbols_list = [char for char in price if char.isnumeric()]
+    # _clear_price = ''.join(symbols_list)
+    _clear_price = float(price)
+    return _clear_price
+
+
+async def is_valid_quantity(quantity: str):
+    if quantity.lower() == "не ограничено":
+        return None
+    else:
+        return int(quantity)
+
+
 async def update_data(key: str, data: Any, state: FSMContext):
     async with state.proxy() as storage:
         storage[key] = data
@@ -38,3 +52,15 @@ async def generate_article() -> int:
             continue
         else:
             return article
+
+
+async def generate_page_product(products) -> str:
+    message: str = "Список товаров:\n\n"
+    for product in products:
+        if product.quantity is not None:
+            quantity = product.quantity
+        else:
+            quantity = ""
+        line = f"""⚪ <b>{product.product_name}</b> - {product.price} {quantity} ({product.article})"""
+        message += product + "\n"
+    return message
