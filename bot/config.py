@@ -8,6 +8,7 @@ from loguru import logger
 class BotConfig(BaseModel):
     bot_token: SecretStr
     channel_id: int
+    per_page: int
 
 
 class DatabaseConfig(BaseModel):
@@ -47,7 +48,7 @@ def load_config(config_path: str) -> Settings:
         logger.error(f"Ошибка при загрузке YAML: {exception}")
 
     except Exception as e:
-        logger.error(f"Необычная ошибка при загрузке конфигурационного файла: {e}")
+        logger.error(f"Ошибка при загрузке конфигурационного файла: {e}")
 
 
 # Получаю директорию бота

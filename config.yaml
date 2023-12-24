@@ -3,6 +3,8 @@ bot:
   bot_token: 5916203690:AAE9AX2zGXy-lnJ6uKsgXYLGt4heqd1J3fs
   # client-channel-id
   channel_id: -1001901707923
+  # количество товаров в одном сообщении
+  per_page: 5
 
 db:
 #  db_host: leeskbagenesh.beget.app

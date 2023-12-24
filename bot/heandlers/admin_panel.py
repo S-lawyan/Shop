@@ -13,6 +13,7 @@ from bot.utils.utilities import update_data, get_data
 from loguru import logger
 from aiogram.utils.exceptions import MessageNotModified
 from aiogram import types
+from bot.config import config
 
 
 class TraderStates(StatesGroup):
@@ -74,16 +75,23 @@ async def quantity_to_finish(message: types.Message, state: FSMContext):
 
 
 async def show_products_list(call: types.CallbackQuery, state: FSMContext):
-    trader_id = int(call.from_user.id)
-    products_poll: list[Product] = await db.get_trader_products(trader_id=trader_id)
-    total_pages, message_text = await send_products_list(products_list=products_poll)
+    products_poll = ["Банан", "Апельсин", "Ваня", "Машина", "Товар", "Продукт", "Хлеб", "Зерно", "Комбайн", "Человек",
+                    "Работа", "Привет", "Хрен", "Молоко", "Апельсин", "Мать", "Толчонка", "Картошка", "Баран",
+                    "Барабан", "Кончелыга", "Стол", "Свеча", "Стул"]
+    # products_poll: list[Product] = await db.get_trader_products(trader_id=int(call.from_user.id))
+    total_pages: int = math.ceil(len(products_poll) / config.bot.per_page)
+    message_text = await send_products_list(products_list=products_poll)
     await call.message.answer(text=message_text, reply_markup=await pagination(total_pages=total_pages))
 
 
 async def previous_page(call: types.CallbackQuery):
+    # products_poll: list[Product] = await db.get_trader_products(trader_id=int(call.from_user.id))
+    products_poll = ["Банан", "Апельсин", "Ваня", "Машина", "Товар", "Продукт", "Хлеб", "Зерно", "Комбайн", "Человек",
+                    "Работа", "Привет", "Хрен", "Молоко", "Апельсин", "Мать", "Толчонка", "Картошка", "Баран",
+                    "Барабан", "Кончелыга", "Стол", "Свеча", "Стул"]
+    total_pages: int = math.ceil(len(products_poll) / config.bot.per_page)
     page = int(call.data.split(":")[1]) - 1 if int(call.data.split(":")[1]) > 0 else 0
-    products_poll: list[Product] = await db.get_trader_products(trader_id=call.from_user.id)
-    total_pages, message_text = await send_products_list(products_list=products_poll, page=page)
+    message_text = await send_products_list(products_list=products_poll, page=page)
     try:
         await call.message.edit_text(text=message_text, reply_markup=await pagination(total_pages=total_pages, page=page))
     except (IndexError, KeyError):
@@ -91,29 +99,29 @@ async def previous_page(call: types.CallbackQuery):
 
 
 async def next_page(call: types.CallbackQuery):
-    page = int(call.data.split(":")[1]) + 1
-    products_poll: list[Product] = await db.get_trader_products(trader_id=call.from_user.id)
-    total_pages, message_text = await send_products_list(products_list=products_poll, page=page)
+    # products_poll: list[Product] = await db.get_trader_products(trader_id=call.from_user.id)
+    products_poll = ["Банан", "Апельсин", "Ваня", "Машина", "Товар", "Продукт", "Хлеб", "Зерно", "Комбайн", "Человек",
+                    "Работа", "Привет", "Хрен", "Молоко", "Апельсин", "Мать", "Толчонка", "Картошка", "Баран",
+                    "Барабан", "Кончелыга", "Стол", "Свеча", "Стул"]
+    total_pages: int = math.ceil(len(products_poll) / config.bot.per_page)
+    page = int(call.data.split(":")[1]) + 1 if int(call.data.split(":")[1]) < (total_pages-1) else (total_pages-1)
+    message_text = await send_products_list(products_list=products_poll, page=page)
     try:
         await call.message.edit_text(text=message_text, reply_markup=await pagination(total_pages=total_pages, page=page))
     except (IndexError, KeyError):
         pass
 
 
-async def send_products_list(products_list: list, page: int = 0) -> tuple:
+async def send_products_list(products_list: list, page: int = 0) -> str:
     # TODO Временная мера
-    products_list = ["Банан", "Апельсин", "Ваня", "Машина", "Товар", "Продукт", "Хлеб", "Зерно", "Комбайн", "Человек",
-                     "Работа", "Привет", "Хрен", "Молоко", "Апельсин", "Мать", "Толчонка", "Картошка", "Баран",
-                     "Барабан", "Кончелыга", "Стол", "Свеча", "Стул"]
-    per_page: int = 5  # количество товаров в одном сообщении
+    per_page = config.bot.per_page
     start_index: int = page * per_page
     end_index: int = start_index + per_page
-    total_pages: int = math.ceil(len(products_list) / per_page)
     products_on_page: list = products_list[start_index:end_index]
     message_text: str = "Список товаров:\n\n"
     for product in products_on_page:
         message_text += product + "\n"
-    return total_pages, message_text
+    return message_text
 
 
 async def message_not_modified_handler(update: types.Update, error):
