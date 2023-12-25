@@ -3,7 +3,7 @@ from aiogram.dispatcher import Dispatcher
 from aiogram import Bot, types
 from loguru import logger
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from bot.heandlers import client, admin, admin_panel
+from bot.handlers import client, admin, admin_panel
 
 
 class BotService:
@@ -20,4 +20,5 @@ class BotService:
         await self.dp.start_polling(self.bot)
 
     async def stop_bot(self) -> None:
+        # await self.bot.delete_my_commands()
         self.dp.stop_polling()

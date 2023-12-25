@@ -128,7 +128,7 @@ def pars_product(product: tuple) -> Product:
     _product = Product()
     _product.product_name = str(product[0])
     _product.price = float(product[1])
-    _product.quantity = int(product[2])
+    _product.quantity = int(product[2]) if product[2] is not None else "♾"
     _product.article = int(product[3])
     _product.trader_id = int(product[4])
     return _product

@@ -1,6 +1,5 @@
 import math
 
-from aiogram import types
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from bot.glossaries.glossary import glossary
@@ -9,11 +8,12 @@ from bot.utils.models import Product
 from bot.keyboards.client_kb import *
 from database.mysqldb import db
 from bot.utils import utilities as utl
-from bot.utils.utilities import update_data, get_data
+from bot.utils.utilities import get_data
 from loguru import logger
 from aiogram.utils.exceptions import MessageNotModified
 from aiogram import types
 from bot.config import config
+from aiogram.dispatcher.filters import Text
 
 
 class TraderStates(StatesGroup):
@@ -22,20 +22,18 @@ class TraderStates(StatesGroup):
     get_price = State()
     get_quantity = State()
     delete_product = State()
+    edit_product = State()
 
 
 # ================= ПАНЕЛЬ АДМИНИСТРАТОРА ==============================
 
-async def show_admin_panel_callback(call: types.CallbackQuery, state: FSMContext) -> None:
-    await call.message.answer(text="Панель администратора", reply_markup=admin_panel_main)
-
-
 async def show_admin_panel_message(message: types.Message, state: FSMContext) -> None:
-    await message.answer(text="Панель администратора", reply_markup=admin_panel_main)
+    await message.answer(text=glossary.get_phrase("trader_main_menu"), reply_markup=admin_panel_main)
 
 
-async def add_product(call: types.CallbackQuery, state: FSMContext):
-    await call.message.answer(text=glossary.get_phrase("get_product_name"), reply_markup=kb_cancel)
+# Adding the product
+async def add_product(message: types.Message, state: FSMContext):
+    await message.answer(text=glossary.get_phrase("get_product_name"), reply_markup=kb_cancel)
     await TraderStates.get_product_name.set()
 
 
@@ -71,29 +69,62 @@ async def quantity_to_finish(message: types.Message, state: FSMContext):
         product.trader_id = message.from_user.id
         await db.save_product(product=product)
         await state.finish()
+        await message.answer(text=glossary.get_phrase("product_is_added"))
     except Exception as exc:
         logger.error(f"Ошибка при вводе количества товара : {exc}")
         await message.answer(text=glossary.get_phrase("uncorrected_enter"))
 
 
-async def show_products_list(call: types.CallbackQuery, state: FSMContext):
-    # products_poll = ["Банан", "Апельсин", "Ваня", "Машина", "Товар", "Продукт", "Хлеб", "Зерно", "Комбайн", "Человек",
-    #                 "Работа", "Привет", "Хрен", "Молоко", "Апельсин", "Мать", "Толчонка", "Картошка", "Баран",
-    #                 "Барабан", "Кончелыга", "Стол", "Свеча", "Стул"]
-    products_poll: list[Product] = await db.get_trader_products(trader_id=int(call.from_user.id))
+# Deleting the product
+async def delete_product(message: types.Message):
+    await message.answer(text=glossary.get_phrase("delete_product"), reply_markup=kb_cancel)
+    await TraderStates.delete_product.set()
+
+
+async def get_article_for_delete_product(message: types.Message, state: FSMContext):
+    try:
+        article = int(message.text)
+        if not await db.check_unique_article(article=article):
+            await message.answer(text=glossary.get_phrase("bad_article"), reply_markup=kb_cancel)
+        else:
+            await db.delete_product(product=int(article), trader_id=int(message.from_user.id))
+            await message.answer(text=glossary.get_phrase("success_delete"))
+    except:
+        await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
+
+
+# Editing position
+async def editing_product(message: types.Message, state: FSMContext):
+    await message.answer(text=glossary.get_phrase("edit_product"), reply_markup=kb_cancel)
+    await TraderStates.edit_product.set()
+
+
+async def get_article_for_editing(message: types.Message, state: FSMContext):
+    try:
+        article = int(message.text)
+        if not await db.check_unique_article(article=article):
+            await message.answer(text=glossary.get_phrase("bad_article"), reply_markup=kb_cancel)
+        else:
+            # TODO делать запрос на изменение параметра позиции и запрос к БД на update
+            # await db.delete_product(product=int(article), trader_id=int(message.from_user.id))
+            # await message.answer(text=glossary.get_phrase("success_delete"))
+    except:
+        await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
+
+
+# Show the product list
+async def show_products_list(message: types.Message, state: FSMContext):
+    products_poll: list[Product] = await db.get_trader_products(trader_id=int(message.from_user.id))
     if len(products_poll) == 0:
-        await call.message.answer(text=glossary.get_phrase("empty_product_list"))
+        await message.answer(text=glossary.get_phrase("empty_product_list"))
     else:
         total_pages: int = math.ceil(len(products_poll) / config.bot.per_page)
         message_text = await send_products_list(products_list=products_poll)
-        await call.message.answer(text=message_text, reply_markup=await pagination(total_pages=total_pages))
+        await message.answer(text=message_text, reply_markup=await pagination(total_pages=total_pages))
 
 
 async def previous_page(call: types.CallbackQuery):
     products_poll: list[Product] = await db.get_trader_products(trader_id=int(call.from_user.id))
-    # products_poll = ["Банан", "Апельсин", "Ваня", "Машина", "Товар", "Продукт", "Хлеб", "Зерно", "Комбайн", "Человек",
-    #                 "Работа", "Привет", "Хрен", "Молоко", "Апельсин", "Мать", "Толчонка", "Картошка", "Баран",
-    #                 "Барабан", "Кончелыга", "Стол", "Свеча", "Стул"]
     total_pages: int = math.ceil(len(products_poll) / config.bot.per_page)
     page = int(call.data.split(":")[1]) - 1 if int(call.data.split(":")[1]) > 0 else 0
     message_text = await send_products_list(products_list=products_poll, page=page)
@@ -105,9 +136,6 @@ async def previous_page(call: types.CallbackQuery):
 
 async def next_page(call: types.CallbackQuery):
     products_poll: list[Product] = await db.get_trader_products(trader_id=call.from_user.id)
-    # products_poll = ["Банан", "Апельсин", "Ваня", "Машина", "Товар", "Продукт", "Хлеб", "Зерно", "Комбайн", "Человек",
-    #                 "Работа", "Привет", "Хрен", "Молоко", "Апельсин", "Мать", "Толчонка", "Картошка", "Баран",
-    #                 "Барабан", "Кончелыга", "Стол", "Свеча", "Стул"]
     total_pages: int = math.ceil(len(products_poll) / config.bot.per_page)
     page = int(call.data.split(":")[1]) + 1 if int(call.data.split(":")[1]) < (total_pages-1) else (total_pages-1)
     message_text = await send_products_list(products_list=products_poll, page=page)
@@ -126,35 +154,20 @@ async def send_products_list(products_list: list[Product], page: int = 0) -> str
     return await utl.generate_page_product(products=products_on_page)
 
 
+# Intended errors handler
 async def message_not_modified_handler(update: types.Update, error):
     await update.callback_query.answer()
     logger.error(error)
     return True
 
 
-async def delete_product(call: types.CallbackQuery):
-    await call.message.answer(text=glossary.get_phrase("delete_product"))
-    await TraderStates.delete_product.set()
-
-
-async def get_article_for_delete_product(message: types.Message, state: FSMContext):
-    try:
-        article = int(message.text)
-        if not await db.check_unique_article(article=article):
-            await message.answer(text=glossary.get_phrase("bad_article"), reply_markup=kb_cancel)
-        else:
-            await db.delete_product(product=int(article), trader_id=message.from_user.id)
-            await message.answer(text=glossary.get_phrase("success_delete"))
-    except:
-        await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
-
-
 def register_handlers_admin_panel(dp: Dispatcher):
     # Vising admin panel
-    dp.register_message_handler(show_admin_panel_message, commands=["manage"], state="*")
-    dp.register_callback_query_handler(show_admin_panel_callback, text=["open_admin_panel"], state=None)
+    dp.register_message_handler(show_admin_panel_message, commands=["menu"], state=None)
+    dp.register_message_handler(show_admin_panel_message, Text(startswith='меню', ignore_case=True), state=None)
     # Adding product
-    dp.register_callback_query_handler(add_product, text=["add_product"], state=None)
+    dp.register_message_handler(add_product, commands=["add"], state=None)
+    dp.register_message_handler(add_product, Text(startswith='Добавить позицию'), state=None)
     dp.register_message_handler(product_name_to_price, content_types=types.ContentType.TEXT,
                                 state=TraderStates.get_product_name)
     dp.register_message_handler(price_to_quantity, content_types=types.ContentType.TEXT,
@@ -162,10 +175,16 @@ def register_handlers_admin_panel(dp: Dispatcher):
     dp.register_message_handler(quantity_to_finish, content_types=types.ContentType.TEXT,
                                 state=TraderStates.get_quantity)
     # Deleting product
+    dp.register_message_handler(delete_product, commands=["dell"], state=None)
+    dp.register_message_handler(delete_product, Text(startswith='Удалить позицию'), state=None)
+    dp.register_message_handler(get_article_for_delete_product, content_types=types.ContentType.TEXT, state=TraderStates.delete_product)
+    # Editing position
 
     # Vising product list
-    dp.register_callback_query_handler(show_products_list, text=["show_product_list"], state=None)
+    dp.register_message_handler(show_products_list, commands=["list"], state=None)
+    dp.register_message_handler(show_products_list, Text(startswith='Список позиций'), state=None)
     dp.register_callback_query_handler(previous_page, lambda query: query.data.startswith("previous:"),
                                        state=None)
     dp.register_callback_query_handler(next_page, lambda query: query.data.startswith("next:"), state=None)
+    # Errors handlers
     dp.register_errors_handler(message_not_modified_handler, exception=MessageNotModified)

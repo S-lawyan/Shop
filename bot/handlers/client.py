@@ -6,6 +6,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from bot.keyboards.client_kb import *
 from database.mysqldb import db
 from bot.utils import utilities as utl
+from aiogram.dispatcher.filters import Text
 
 
 class TraderStates(StatesGroup):
@@ -16,7 +17,7 @@ class TraderStates(StatesGroup):
 # ================= БЛОК ОСНОВНЫХ КОМАНД БОТА ==============================
 async def command_start(message: types.Message) -> None:
     if await db.check_trader(tg_id=int(message.from_user.id)):
-        await message.answer(text=glossary.get_phrase("repeat_start"), reply_markup=kb_open_admin_panel)
+        await message.answer(text=glossary.get_phrase("trader_main_menu"), reply_markup=admin_panel_main)
     else:
         await message.answer(
             text=glossary.get_phrase(
@@ -27,12 +28,15 @@ async def command_start(message: types.Message) -> None:
         )
 
 
-async def command_help_callback(call: types.CallbackQuery, state: FSMContext) -> None:
-    await call.message.answer(text=glossary.get_phrase("help"))
-
-
-async def command_help_message(message: types.CallbackQuery, state: FSMContext) -> None:
+async def command_help_message(message: types.Message, state: FSMContext) -> None:
     await message.answer(text=glossary.get_phrase("help"))
+
+
+async def command_cancel_message(message: types.Message, state: FSMContext) -> None:
+    current_state = await state.get_state()
+    if current_state is not None:
+        await state.finish()
+    await message.answer(text=glossary.get_phrase("cancelled"), reply_markup=admin_panel_main)
 
 
 # ================= БЛОК РЕГИСТРАЦИИ НОВОГО ТРЕЙДЕРА ==============================
@@ -60,21 +64,22 @@ async def get_fio_to_tg_id(message: types.Message, state: FSMContext) -> None:
             shop_name = storage["shop_name"]
         tg_id = message.from_user.id
         await db.save_trader(tg_id=tg_id, trader_name=shop_name, fio=fio)
-        await message.answer(text=glossary.get_phrase("reg_finish", fio=fio), reply_markup=kb_open_admin_panel)
+        await message.answer(text=glossary.get_phrase("reg_finish", fio=fio), reply_markup=admin_panel_main)
         await state.finish()
     else:
         await message.answer(text=glossary.get_phrase("bad_fio"))
 
 
-
-
-
 def register_handlers_client(dp: Dispatcher):
+    # start
     dp.register_message_handler(command_start, commands=["start"], state=None)
-    # При команде
+    # help
     dp.register_message_handler(command_help_message, commands=["help"], state='*')
-    # При нажатии на кнопку
-    dp.register_callback_query_handler(command_help_callback, text=["help"], state='*')
+    dp.register_message_handler(command_help_message, Text(startswith='помощь', ignore_case=True), state='*')
+    # Cancel
+    dp.register_message_handler(command_cancel_message, commands=["cancel"], state='*')
+    dp.register_message_handler(command_cancel_message, Text(equals='отмена', ignore_case=True), state='*')
+    # Registration new trader
     dp.register_callback_query_handler(start_registration, text=["registration"], state=None)
     dp.register_message_handler(get_shop_name_to_fio, content_types=types.ContentType.TEXT,
                                 state=TraderStates.get_shop_name)

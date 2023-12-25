@@ -4,6 +4,7 @@ from typing import Any
 
 from aiogram.dispatcher import FSMContext
 from database.mysqldb import db
+from bot.utils.models import Product
 
 
 async def is_valid_name(name: str):
@@ -29,15 +30,10 @@ async def is_valid_price(price: str):
 
 
 async def is_valid_quantity(quantity: str):
-    if quantity.lower() == "не ограничено":
+    if quantity.lower() == "нет":
         return None
     else:
         return int(quantity)
-
-
-async def update_data(key: str, data: Any, state: FSMContext):
-    async with state.proxy() as storage:
-        storage[key] = data
 
 
 async def get_data(key: str, state: FSMContext):
@@ -54,13 +50,9 @@ async def generate_article() -> int:
             return article
 
 
-async def generate_page_product(products) -> str:
-    message: str = "Список товаров:\n\n"
+async def generate_page_product(products: list[Product]) -> str:
+    message: str = "<u>📋 Список товаров</u>:\n\n"
     for product in products:
-        if product.quantity is not None:
-            quantity = product.quantity
-        else:
-            quantity = ""
-        line = f"""⚪ <b>{product.product_name}</b> - {product.price} {quantity} ({product.article})"""
-        message += product + "\n"
+        line = f"""🔹<b>{product.product_name}</b>\nЦена: <b>{product.price} ₽</b>\nКоличество: <b>{product.quantity}</b>\nАртикул: <code>{product.article}</code>\n\n"""
+        message += line
     return message
