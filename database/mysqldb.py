@@ -97,7 +97,7 @@ class DataBaseService:
             {product.trader_id})
             """
             await self.execute_query(query=query)
-            logger.error(f"""Добавлен товар : ('{product.product_name}', {product.price}, {product.quantity}, {product.article}, {product.trader_id})""")
+            logger.info(f"""Добавлен товар : ('{product.product_name}', {product.price}, {product.quantity}, {product.article}, {product.trader_id})""")
         except Exception as exc:
             logger.error(f"Ошибка при добавлении товара : {exc}")
 
@@ -107,7 +107,7 @@ class DataBaseService:
                 DELETE FROM Products WHERE article={article} and trader_id={trader_id}
             """
             await self.execute_query(query=query)
-            logger.error(f"Удален товар : {article} {trader_id}")
+            logger.info(f"Удален товар : {article} {trader_id}")
         except Exception as exc:
             logger.error(f"Ошибка при удалении товара : {exc}")
 
@@ -118,6 +118,26 @@ class DataBaseService:
             return await pars_products(result)
         except Exception as exc:
             logger.error(f"Ошибка при получении товаров продавца : {exc}")
+
+    async def update_new_price(self, article: int, price: float):
+        try:
+            query = f"""
+                UPDATE Products SET price={price} WHERE article={article}
+            """
+            await self.execute_query(query=query)
+            logger.info(f"Обновлена цена товара {article} - {price}")
+        except Exception as exc:
+            logger.error(f"Ошибка при обновлении цены {article} {price} : {exc}")
+
+    async def update_new_count(self, article: int, count: int):
+        try:
+            query = f"""
+                UPDATE Products SET quantity_product={count} WHERE article={article}
+            """
+            await self.execute_query(query=query)
+            logger.info(f"Обновлено количество товара {article} - {count}")
+        except Exception as exc:
+            logger.error(f"Ошибка при изменении количества {article} {count} : {exc}")
 
 
 async def pars_products(result: list[tuple]) -> list[Product]:

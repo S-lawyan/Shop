@@ -23,6 +23,9 @@ class TraderStates(StatesGroup):
     get_quantity = State()
     delete_product = State()
     edit_product = State()
+    editing_product = State()
+    wait_price = State()
+    wait_count = State()
 
 
 # ================= ПАНЕЛЬ АДМИНИСТРАТОРА ==============================
@@ -69,7 +72,7 @@ async def quantity_to_finish(message: types.Message, state: FSMContext):
         product.trader_id = message.from_user.id
         await db.save_product(product=product)
         await state.finish()
-        await message.answer(text=glossary.get_phrase("product_is_added"))
+        await message.answer(text=glossary.get_phrase("product_is_added"), reply_markup=admin_panel_main)
     except Exception as exc:
         logger.error(f"Ошибка при вводе количества товара : {exc}")
         await message.answer(text=glossary.get_phrase("uncorrected_enter"))
@@ -87,9 +90,9 @@ async def get_article_for_delete_product(message: types.Message, state: FSMConte
         if not await db.check_unique_article(article=article):
             await message.answer(text=glossary.get_phrase("bad_article"), reply_markup=kb_cancel)
         else:
-            await db.delete_product(product=int(article), trader_id=int(message.from_user.id))
-            await message.answer(text=glossary.get_phrase("success_delete"))
-    except:
+            await db.delete_product(article=int(article), trader_id=int(message.from_user.id))
+            await message.answer(text=glossary.get_phrase("success_delete"), reply_markup=admin_panel_main)
+    except Exception as exc:
         await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
 
 
@@ -105,9 +108,45 @@ async def get_article_for_editing(message: types.Message, state: FSMContext):
         if not await db.check_unique_article(article=article):
             await message.answer(text=glossary.get_phrase("bad_article"), reply_markup=kb_cancel)
         else:
-            # TODO делать запрос на изменение параметра позиции и запрос к БД на update
-            # await db.delete_product(product=int(article), trader_id=int(message.from_user.id))
-            # await message.answer(text=glossary.get_phrase("success_delete"))
+            await message.reply(text=glossary.get_phrase("parameter_selection"), reply_markup=kb_parameter_selection)
+            await state.update_data(article=article)
+            await TraderStates.editing_product.set()
+    except:
+        await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
+
+
+async def editing(message: types.Message, state: TraderStates.editing_product):
+    try:
+        if message.text == "Изменить цену":
+            await message.answer(text=glossary.get_phrase("new_price"))
+            await TraderStates.wait_price.set()
+        elif message.text == "Изменить количество":
+            await message.answer(text=glossary.get_phrase("new_count"))
+            await TraderStates.wait_count.set()
+        else:
+            await message.answer(text=glossary.get_phrase("dont_understand"), reply_markup=kb_parameter_selection)
+    except Exception as exc:
+        logger.error(f"Ошибка при изменении данных позиции : {exc}")
+
+
+async def editing_new_price(message: types.Message, state: TraderStates.wait_price):
+    article: int = await get_data(key="article", state=state)
+    try:
+        new_price = float(message.text)
+        await db.update_new_price(article=article, price=new_price)
+        await message.answer(text=glossary.get_phrase("success_update_price"), reply_markup=admin_panel_main)
+        await state.finish()
+    except:
+        await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
+
+
+async def editing_new_count(message: types.Message, state: TraderStates.wait_count):
+    article: int = await get_data(key="article", state=state)
+    try:
+        new_count = int(message.text)
+        await db.update_new_count(article=article, count=new_count)
+        await message.answer(text=glossary.get_phrase("success_update_count"), reply_markup=admin_panel_main)
+        await state.finish()
     except:
         await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
 
@@ -161,13 +200,18 @@ async def message_not_modified_handler(update: types.Update, error):
     return True
 
 
+# Unknown commands
+async def unknown_commands(message: types.Message):
+    await message.answer(text=glossary.get_phrase("dont_understand"))
+
+
 def register_handlers_admin_panel(dp: Dispatcher):
     # Vising admin panel
     dp.register_message_handler(show_admin_panel_message, commands=["menu"], state=None)
     dp.register_message_handler(show_admin_panel_message, Text(startswith='меню', ignore_case=True), state=None)
     # Adding product
     dp.register_message_handler(add_product, commands=["add"], state=None)
-    dp.register_message_handler(add_product, Text(startswith='Добавить позицию'), state=None)
+    dp.register_message_handler(add_product, Text(equals='Добавить позицию'), state=None)
     dp.register_message_handler(product_name_to_price, content_types=types.ContentType.TEXT,
                                 state=TraderStates.get_product_name)
     dp.register_message_handler(price_to_quantity, content_types=types.ContentType.TEXT,
@@ -176,10 +220,18 @@ def register_handlers_admin_panel(dp: Dispatcher):
                                 state=TraderStates.get_quantity)
     # Deleting product
     dp.register_message_handler(delete_product, commands=["dell"], state=None)
-    dp.register_message_handler(delete_product, Text(startswith='Удалить позицию'), state=None)
+    dp.register_message_handler(delete_product, Text(equals='Удалить позицию'), state=None)
     dp.register_message_handler(get_article_for_delete_product, content_types=types.ContentType.TEXT, state=TraderStates.delete_product)
     # Editing position
-
+    dp.register_message_handler(editing_product, Text(equals='Изменить позицию', ignore_case=True), state=None)
+    dp.register_message_handler(get_article_for_editing, content_types=types.ContentType.TEXT,
+                                state=TraderStates.edit_product)
+    dp.register_message_handler(editing, Text(equals='Изменить цену'), state=TraderStates.editing_product)
+    dp.register_message_handler(editing, Text(equals='Изменить количество'), state=TraderStates.editing_product)
+    dp.register_message_handler(editing_new_price, content_types=types.ContentType.TEXT,
+                                state=TraderStates.wait_price)
+    dp.register_message_handler(editing_new_count, content_types=types.ContentType.TEXT,
+                                state=TraderStates.wait_count)
     # Vising product list
     dp.register_message_handler(show_products_list, commands=["list"], state=None)
     dp.register_message_handler(show_products_list, Text(startswith='Список позиций'), state=None)
@@ -188,3 +240,5 @@ def register_handlers_admin_panel(dp: Dispatcher):
     dp.register_callback_query_handler(next_page, lambda query: query.data.startswith("next:"), state=None)
     # Errors handlers
     dp.register_errors_handler(message_not_modified_handler, exception=MessageNotModified)
+    # Unknown command
+    dp.register_message_handler(unknown_commands, content_types=["any"], state="*")

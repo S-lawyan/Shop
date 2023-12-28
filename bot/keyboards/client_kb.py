@@ -17,6 +17,11 @@ btn_cancel = KeyboardButton(text="Отмена", command='cancel')
 kb_cancel = ReplyKeyboardMarkup(resize_keyboard=True).add(btn_cancel)
 
 
+btn_edit_price = KeyboardButton(text="Изменить цену", command='edit_price')
+btn_edit_count = KeyboardButton(text="Изменить количество", command='edit_count')
+kb_parameter_selection = ReplyKeyboardMarkup(resize_keyboard=True).add(btn_edit_price, btn_edit_count).add(btn_cancel)
+
+
 async def pagination(total_pages: int, page: int = 0):
     return InlineKeyboardMarkup().row(
         InlineKeyboardButton(text="⬅", callback_data=f"previous:{page}"),
