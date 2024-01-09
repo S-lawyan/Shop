@@ -6,7 +6,7 @@ from bot.glossaries.glossary import glossary
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from bot.utils.models import Product
 from bot.keyboards.client_kb import *
-from database.mysqldb import db
+from database.storage import es
 from bot.utils import utilities as utl
 from bot.utils.utilities import get_data
 from loguru import logger
@@ -17,7 +17,7 @@ from aiogram.dispatcher.filters import Text
 
 
 class TraderStates(StatesGroup):
-    # manage products list
+    # Manage products list
     get_product_name = State()
     get_price = State()
     get_quantity = State()
@@ -30,12 +30,12 @@ class TraderStates(StatesGroup):
 
 # ================= ПАНЕЛЬ АДМИНИСТРАТОРА ==============================
 
-async def show_admin_panel_message(message: types.Message, state: FSMContext) -> None:
+async def show_admin_panel_message(message: types.Message) -> None:
     await message.answer(text=glossary.get_phrase("trader_main_menu"), reply_markup=admin_panel_main)
 
 
 # Adding the product
-async def add_product(message: types.Message, state: FSMContext):
+async def add_product(message: types.Message):
     await message.answer(text=glossary.get_phrase("get_product_name"), reply_markup=kb_cancel)
     await TraderStates.get_product_name.set()
 
@@ -51,7 +51,6 @@ async def product_name_to_price(message: types.Message, state: FSMContext):
 
 async def price_to_quantity(message: types.Message, state: FSMContext):
     product: Product = await get_data(key="product", state=state)
-    # TODO Предобработка вводимой цены от строки до float
     try:
         product.price = await utl.is_valid_price(price=message.text)
         # await update_data(key="product", data=product, state=state)
@@ -70,7 +69,7 @@ async def quantity_to_finish(message: types.Message, state: FSMContext):
         article = await utl.generate_article()
         product.article = article
         product.trader_id = message.from_user.id
-        await db.save_product(product=product)
+        await es.save_product(product=product)
         await state.finish()
         await message.answer(text=glossary.get_phrase("product_is_added"), reply_markup=admin_panel_main)
     except Exception as exc:
@@ -87,10 +86,10 @@ async def delete_product(message: types.Message):
 async def get_article_for_delete_product(message: types.Message, state: FSMContext):
     try:
         article = int(message.text)
-        if not await db.check_unique_article(article=article):
+        if not await es.check_in_products_index(field="article", value=article):
             await message.answer(text=glossary.get_phrase("bad_article"), reply_markup=kb_cancel)
         else:
-            await db.delete_product(article=int(article), trader_id=int(message.from_user.id))
+            await es.delete_product(article=int(article), trader_id=int(message.from_user.id))
             await message.answer(text=glossary.get_phrase("success_delete"), reply_markup=admin_panel_main)
     except Exception as exc:
         await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
@@ -105,7 +104,7 @@ async def editing_product(message: types.Message, state: FSMContext):
 async def get_article_for_editing(message: types.Message, state: FSMContext):
     try:
         article = int(message.text)
-        if not await db.check_unique_article(article=article):
+        if not await es.check_unique_article(article=article):
             await message.answer(text=glossary.get_phrase("bad_article"), reply_markup=kb_cancel)
         else:
             await message.reply(text=glossary.get_phrase("parameter_selection"), reply_markup=kb_parameter_selection)
@@ -133,7 +132,7 @@ async def editing_new_price(message: types.Message, state: TraderStates.wait_pri
     article: int = await get_data(key="article", state=state)
     try:
         new_price = float(message.text)
-        await db.update_new_price(article=article, price=new_price)
+        await es.update_new_price(article=article, price=new_price)
         await message.answer(text=glossary.get_phrase("success_update_price"), reply_markup=admin_panel_main)
         await state.finish()
     except:
@@ -144,7 +143,7 @@ async def editing_new_count(message: types.Message, state: TraderStates.wait_cou
     article: int = await get_data(key="article", state=state)
     try:
         new_count = int(message.text)
-        await db.update_new_count(article=article, count=new_count)
+        await es.update_new_count(article=article, count=new_count)
         await message.answer(text=glossary.get_phrase("success_update_count"), reply_markup=admin_panel_main)
         await state.finish()
     except:
@@ -153,7 +152,7 @@ async def editing_new_count(message: types.Message, state: TraderStates.wait_cou
 
 # Show the product list
 async def show_products_list(message: types.Message, state: FSMContext):
-    products_poll: list[Product] = await db.get_trader_products(trader_id=int(message.from_user.id))
+    products_poll: list[Product] = await es.get_trader_products(trader_id=int(message.from_user.id))
     if len(products_poll) == 0:
         await message.answer(text=glossary.get_phrase("empty_product_list"))
     else:
@@ -163,7 +162,7 @@ async def show_products_list(message: types.Message, state: FSMContext):
 
 
 async def previous_page(call: types.CallbackQuery):
-    products_poll: list[Product] = await db.get_trader_products(trader_id=int(call.from_user.id))
+    products_poll: list[Product] = await es.get_trader_products(trader_id=int(call.from_user.id))
     total_pages: int = math.ceil(len(products_poll) / config.bot.per_page)
     page = int(call.data.split(":")[1]) - 1 if int(call.data.split(":")[1]) > 0 else 0
     message_text = await send_products_list(products_list=products_poll, page=page)
@@ -174,7 +173,7 @@ async def previous_page(call: types.CallbackQuery):
 
 
 async def next_page(call: types.CallbackQuery):
-    products_poll: list[Product] = await db.get_trader_products(trader_id=call.from_user.id)
+    products_poll: list[Product] = await es.get_trader_products(trader_id=call.from_user.id)
     total_pages: int = math.ceil(len(products_poll) / config.bot.per_page)
     page = int(call.data.split(":")[1]) + 1 if int(call.data.split(":")[1]) < (total_pages-1) else (total_pages-1)
     message_text = await send_products_list(products_list=products_poll, page=page)

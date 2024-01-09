@@ -3,7 +3,7 @@ import random
 from typing import Any
 
 from aiogram.dispatcher import FSMContext
-from database.mysqldb import db
+from database.storage import es
 from bot.utils.models import Product
 
 
@@ -44,7 +44,7 @@ async def get_data(key: str, state: FSMContext):
 async def generate_article() -> int:
     while True:
         article = int(random.randint(100000, 999999))
-        if await db.check_unique_article(article=article):
+        if await es.check_unique_article(article=article):
             continue
         else:
             return article

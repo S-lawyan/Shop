@@ -4,7 +4,7 @@ from aiogram.dispatcher import FSMContext
 from bot.glossaries.glossary import glossary
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from bot.keyboards.client_kb import *
-from database.mysqldb import db
+from database.storage import es
 from bot.utils import utilities as utl
 from aiogram.dispatcher.filters import Text
 
@@ -16,7 +16,7 @@ class TraderStates(StatesGroup):
 
 # ================= БЛОК ОСНОВНЫХ КОМАНД БОТА ==============================
 async def command_start(message: types.Message) -> None:
-    if await db.check_trader(tg_id=int(message.from_user.id)):
+    if await es.check_in_traders_index(field="tg_id", value=int(message.from_user.id)):
         await message.answer(text=glossary.get_phrase("trader_main_menu"), reply_markup=admin_panel_main)
     else:
         await message.answer(
@@ -28,7 +28,7 @@ async def command_start(message: types.Message) -> None:
         )
 
 
-async def command_help_message(message: types.Message, state: FSMContext) -> None:
+async def command_help_message(message: types.Message) -> None:
     await message.answer(text=glossary.get_phrase("help"))
 
 
@@ -40,7 +40,7 @@ async def command_cancel_message(message: types.Message, state: FSMContext) -> N
 
 
 # ================= БЛОК РЕГИСТРАЦИИ НОВОГО ТРЕЙДЕРА ==============================
-async def start_registration(call: types.CallbackQuery, state: FSMContext) -> None:
+async def start_registration(call: types.CallbackQuery) -> None:
     await call.message.edit_reply_markup(reply_markup=None)
     await call.message.answer(text=glossary.get_phrase("get_shop_name"))
     await TraderStates.get_shop_name.set()
@@ -50,7 +50,7 @@ async def get_shop_name_to_fio(message: types.Message, state: FSMContext) -> Non
     shop_name = message.text
     async with state.proxy() as storage:
         storage["shop_name"] = shop_name
-    if await db.check_shop_name(shop_name=shop_name):
+    if await es.check_in_traders_index(field="name", value=shop_name):
         await message.answer(text=glossary.get_phrase("reply_shop_name"))
     else:
         await message.answer(text=glossary.get_phrase("get_fio"))
@@ -63,7 +63,7 @@ async def get_fio_to_tg_id(message: types.Message, state: FSMContext) -> None:
         async with state.proxy() as storage:
             shop_name = storage["shop_name"]
         tg_id = message.from_user.id
-        await db.save_trader(tg_id=tg_id, trader_name=shop_name, fio=fio)
+        await es.save_trader(tg_id=tg_id, trader_name=shop_name, fio=fio)
         await message.answer(text=glossary.get_phrase("reg_finish", fio=fio), reply_markup=admin_panel_main)
         await state.finish()
     else:
@@ -85,4 +85,3 @@ def register_handlers_client(dp: Dispatcher):
                                 state=TraderStates.get_shop_name)
     dp.register_message_handler(get_fio_to_tg_id, content_types=types.ContentType.TEXT,
                                 state=TraderStates.get_fio)
-

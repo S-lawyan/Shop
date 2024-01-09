@@ -11,12 +11,13 @@ class BotConfig(BaseModel):
     per_page: int
 
 
-class DatabaseConfig(BaseModel):
-    db_host: str
-    db_port: int
-    db_user: str
-    db_pass: SecretStr
-    db_name: str
+class ESConfig(BaseModel):
+    es_host: str
+    es_port: int
+    es_user: str
+    es_pass: SecretStr
+    es_connections_limit: int
+    connection_attempt: int
 
     def get_mysql_uri(self) -> str:
         uri_template = "mysql+asyncmy://{user}:{password}@{host}:{port}/{db_name}"
@@ -30,7 +31,7 @@ class DatabaseConfig(BaseModel):
 
 
 class Settings(BaseModel):
-    db: DatabaseConfig
+    es: ESConfig
     bot: BotConfig
 
 
