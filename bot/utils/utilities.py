@@ -44,7 +44,7 @@ async def get_data(key: str, state: FSMContext):
 async def generate_article() -> int:
     while True:
         article = int(random.randint(100000, 999999))
-        if await es.check_unique_article(article=article):
+        if await es.check_in_products_index(field="article", value=article):
             continue
         else:
             return article

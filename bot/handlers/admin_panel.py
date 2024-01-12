@@ -4,6 +4,8 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from bot.glossaries.glossary import glossary
 from aiogram.dispatcher.filters.state import State, StatesGroup
+
+from bot.utils.exceptions import DocumentIsNotExist
 from bot.utils.models import Product
 from bot.keyboards.client_kb import *
 from database.storage import es
@@ -53,7 +55,6 @@ async def price_to_quantity(message: types.Message, state: FSMContext):
     product: Product = await get_data(key="product", state=state)
     try:
         product.price = await utl.is_valid_price(price=message.text)
-        # await update_data(key="product", data=product, state=state)
         await state.update_data(product=product)
         await message.answer(text=glossary.get_phrase("get_quantity"))
         await TraderStates.get_quantity.set()
@@ -71,7 +72,7 @@ async def quantity_to_finish(message: types.Message, state: FSMContext):
         product.trader_id = message.from_user.id
         await es.save_product(product=product)
         await state.finish()
-        await message.answer(text=glossary.get_phrase("product_is_added"), reply_markup=admin_panel_main)
+        await message.answer(text=glossary.get_phrase("product_is_added", article=article), reply_markup=admin_panel_main)
     except Exception as exc:
         logger.error(f"Ошибка при вводе количества товара : {exc}")
         await message.answer(text=glossary.get_phrase("uncorrected_enter"))
@@ -89,9 +90,9 @@ async def get_article_for_delete_product(message: types.Message, state: FSMConte
         if not await es.check_in_products_index(field="article", value=article):
             await message.answer(text=glossary.get_phrase("bad_article"), reply_markup=kb_cancel)
         else:
-            await es.delete_product(article=int(article), trader_id=int(message.from_user.id))
+            await es.delete_product(article=int(article))
             await message.answer(text=glossary.get_phrase("success_delete"), reply_markup=admin_panel_main)
-    except Exception as exc:
+    except Exception:
         await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
 
 
@@ -104,7 +105,7 @@ async def editing_product(message: types.Message, state: FSMContext):
 async def get_article_for_editing(message: types.Message, state: FSMContext):
     try:
         article = int(message.text)
-        if not await es.check_unique_article(article=article):
+        if not await es.check_in_products_index(field="article", value=article):
             await message.answer(text=glossary.get_phrase("bad_article"), reply_markup=kb_cancel)
         else:
             await message.reply(text=glossary.get_phrase("parameter_selection"), reply_markup=kb_parameter_selection)
@@ -132,10 +133,12 @@ async def editing_new_price(message: types.Message, state: TraderStates.wait_pri
     article: int = await get_data(key="article", state=state)
     try:
         new_price = float(message.text)
-        await es.update_new_price(article=article, price=new_price)
+        await es.update_product_document(article=article, update_field="price", update_value=new_price)
         await message.answer(text=glossary.get_phrase("success_update_price"), reply_markup=admin_panel_main)
         await state.finish()
-    except:
+    except DocumentIsNotExist:
+        await message.answer(text=glossary.get_phrase("updating_errors"), reply_markup=kb_cancel)
+    except Exception:
         await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
 
 
@@ -143,10 +146,12 @@ async def editing_new_count(message: types.Message, state: TraderStates.wait_cou
     article: int = await get_data(key="article", state=state)
     try:
         new_count = int(message.text)
-        await es.update_new_count(article=article, count=new_count)
+        await es.update_product_document(article=article, update_field="count", update_value=new_count)
         await message.answer(text=glossary.get_phrase("success_update_count"), reply_markup=admin_panel_main)
         await state.finish()
-    except:
+    except DocumentIsNotExist:
+        await message.answer(text=glossary.get_phrase("updating_errors"), reply_markup=kb_cancel)
+    except Exception:
         await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
 
 

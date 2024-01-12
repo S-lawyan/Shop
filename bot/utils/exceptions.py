@@ -6,3 +6,7 @@ class ErrorAddingTrader(Exception):
 
 class ErrorExecutingESQuery(Exception):
     pass
+
+
+class DocumentIsNotExist(Exception):
+    pass

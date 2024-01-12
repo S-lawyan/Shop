@@ -16,7 +16,7 @@ class BotService:
         # admin.register_handlers_admin(self.dp)
         client.register_handlers_client(self.dp)
         admin_panel.register_handlers_admin_panel(self.dp)
-        logger.info("The bot is running!")
+        logger.warning("The bot is running!")
         await self.dp.start_polling(self.bot)
 
     async def stop_bot(self) -> None:
