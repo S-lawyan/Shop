@@ -167,102 +167,22 @@ class DataBaseService:
         """
         query = {"query": {"match": {"trader_id": trader_id}}}
         response = await self.search_es_query(index=self.products_index, query=query)
-        documents = []
-        # TODO написать функцию парсингка товаров из ответа. На выходе list[Product].
-        #  Передать все это все дело на генерацию сообщения в utilites и вернуть в вдмин панель уже текст сообщения.
-        #  После этого отправить сообщение юзеру. Переделать пагинацию
+        documents = await pars_products(response=response["hits"]["hits"])
         return documents
 
 
-    #
-    # async def check_shop_name(self, shop_name):
-    #     try:
-    #         query = f"SELECT * FROM Traders WHERE trader_name = '{shop_name}'"
-    #         result = await self.execute_query(query=query)
-    #         if len(result) == 0:
-    #             return False
-    #         else:
-    #             return True
-    #     except Exception as exc:
-    #         logger.error(f"Ошибка при проверке дубликата названия магазина : {exc}")
-    #
-    # async def check_unique_article(self, article: int):
-    #     try:
-    #         query = f"""SELECT * FROM Products WHERE article={article} ORDER BY article ASC;"""
-    #         result = await self.execute_query(query=query)
-    #         if len(result) == 0:
-    #             return False
-    #         else:
-    #             return True
-    #     except Exception as exc:
-    #         logger.error(f"Ошибка проверки артикула : {exc}")
-    #
-    # async def save_product(self, product: Product):
-    #     try:
-    #         query = f"""
-    #         INSERT INTO Products (product_name, price, quantity_product, article, trader_id)
-    #         VALUES
-    #         ('{product.product_name}',
-    #         {product.price},
-    #         {product.quantity if product.quantity is not None else "NULL"},
-    #         {product.article},
-    #         {product.trader_id})
-    #         """
-    #         await self.execute_query(query=query)
-    #         logger.info(f"""Добавлен товар : ('{product.product_name}', {product.price}, {product.quantity}, {product.article}, {product.trader_id})""")
-    #     except Exception as exc:
-    #         logger.error(f"Ошибка при добавлении товара : {exc}")
-    #
-    # async def delete_product(self, trader_id: int, article: int):
-    #     try:
-    #         query = f"""
-    #             DELETE FROM Products WHERE article={article} and trader_id={trader_id}
-    #         """
-    #         await self.execute_query(query=query)
-    #         logger.info(f"Удален товар : {article} {trader_id}")
-    #     except Exception as exc:
-    #         logger.error(f"Ошибка при удалении товара : {exc}")
-    #
-    # async def get_trader_products(self, trader_id: int):
-    #     try:
-    #         query = f""" SELECT product_name, price, quantity_product, article, trader_id FROM Products WHERE trader_id={trader_id} """
-    #         result = list(await self.execute_query(query=query))
-    #         return await pars_products(result)
-    #     except Exception as exc:
-    #         logger.error(f"Ошибка при получении товаров продавца : {exc}")
-    #
-    # async def update_new_price(self, article: int, price: float):
-    #     try:
-    #         query = f"""
-    #             UPDATE Products SET price={price} WHERE article={article}
-    #         """
-    #         await self.execute_query(query=query)
-    #         logger.info(f"Обновлена цена товара {article} - {price}")
-    #     except Exception as exc:
-    #         logger.error(f"Ошибка при обновлении цены {article} {price} : {exc}")
-    #
-    # async def update_new_count(self, article: int, count: int):
-    #     try:
-    #         query = f"""
-    #             UPDATE Products SET quantity_product={count} WHERE article={article}
-    #         """
-    #         await self.execute_query(query=query)
-    #         logger.info(f"Обновлено количество товара {article} - {count}")
-    #     except Exception as exc:
-    #         logger.error(f"Ошибка при изменении количества {article} {count} : {exc}")
+async def pars_products(response: list[dict]) -> list[Product]:
+    return [pars_product(product) for product in response]
 
 
-async def pars_products(result: list[tuple]) -> list[Product]:
-    return [pars_product(product) for product in result]
-
-
-def pars_product(product: tuple) -> Product:
+def pars_product(product: dict) -> Product:
     _product = Product()
-    _product.product_name = str(product[0])
-    _product.price = float(product[1])
-    _product.quantity = int(product[2]) if product[2] is not None else "♾"
-    _product.article = int(product[3])
-    _product.trader_id = int(product[4])
+    source: dict = product["_source"]
+    _product.product_name = str(source["product_name"])
+    _product.price = float(source["price"])
+    _product.quantity = int(source["count"]) if source.get("count", None) is not None else "♾"
+    _product.article = int(source["article"])
+    _product.trader_id = int(source["trader_id"])
     return _product
 
 
