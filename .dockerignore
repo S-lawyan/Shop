@@ -1,0 +1,9 @@
+.mypy_cache
+README.md
+venv/
+.venv
+env/
+.env
+.mypy_cache/
+Buyer/config.yaml
+Trader/config.yaml
