@@ -8,7 +8,7 @@ from bot.handlers import client, admin, admin_panel
 
 class BotService:
     def __init__(self, config: Settings):
-        self.bot = Bot(token=config.bot.bot_token.get_secret_value(), parse_mode=types.ParseMode.HTML)  # MARKDOWN_V2
+        self.bot = Bot(token=config.bot.bot_token.get_secret_value(), parse_mode=types.ParseMode.HTML)
         self.dp = Dispatcher(self.bot, storage=MemoryStorage())
 
     async def start_bot(self) -> None:
@@ -20,5 +20,4 @@ class BotService:
         await self.dp.start_polling(self.bot)
 
     async def stop_bot(self) -> None:
-        # await self.bot.delete_my_commands()
         self.dp.stop_polling()

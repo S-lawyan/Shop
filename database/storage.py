@@ -97,7 +97,7 @@ class DataBaseService:
         :param value:
         :return:
         """
-        query = {"query": {"match": {field: value}}}
+        query = {"query": {"term": {field: value}}} # term - потому что нужно точное совпадение
         response = await self.search_es_query(index=self.trader_index, query=query)
         return True if len(response["hits"]["hits"]) > 0 else False
 
@@ -108,7 +108,7 @@ class DataBaseService:
         :param value:
         :return:
         """
-        query = {"query": {"match": {field: value}}}
+        query = {"query": {"term": {field: value}}}
         response = await self.search_es_query(index=self.products_index, query=query)
         return True if len(response["hits"]["hits"]) > 0 else False
 
@@ -148,7 +148,7 @@ class DataBaseService:
         :param update_value:
         :return:
         """
-        query = {"query": {"match": {"article": article}}}
+        query = {"query": {"term": {"article": article}}}
         response = await self.search_es_query(index=self.products_index, query=query)
         if response.get("hits", {}).get("hits"):
             doc_id = response["hits"]["hits"][0]["_id"]
@@ -165,7 +165,7 @@ class DataBaseService:
         :param trader_id:
         :return:
         """
-        query = {"query": {"match": {"trader_id": trader_id}}}
+        query = {"query": {"term": {"trader_id": trader_id}}}
         response = await self.search_es_query(index=self.products_index, query=query)
         documents = await pars_products(response=response["hits"]["hits"])
         return documents
@@ -188,10 +188,4 @@ def pars_product(product: dict) -> Product:
 
 es = DataBaseService(config)
 
-# try:
-#     query = f"""
-#
-#     """
-#     await self.execute_query(query=query)
-# except Exception as exc:
-#     logger.error(f"Ошибка при : {exc}")
+

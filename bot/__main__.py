@@ -20,7 +20,6 @@ async def main():
         await bot.start_bot()
     finally:
         await bot.stop_bot()
-        # await db.close()
 
 
 if __name__ == "__main__":

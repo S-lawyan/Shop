@@ -1,6 +1,5 @@
 import re
 import random
-from typing import Any
 
 from aiogram.dispatcher import FSMContext
 from database.storage import es
