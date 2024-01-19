@@ -3,7 +3,7 @@ from aiogram.dispatcher import Dispatcher
 from aiogram import Bot, types
 from loguru import logger
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from bot.handlers import client, admin, admin_panel
+from bot.handlers import client, admin_panel
 
 
 class BotService:

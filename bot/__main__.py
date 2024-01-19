@@ -14,14 +14,13 @@ async def main():
         compression="zip",
         level="DEBUG",
     )
+    bot = BotService(config)
     try:
         await es.es_healthcheck()
-        bot = BotService(config)
         await bot.start_bot()
     finally:
         await bot.stop_bot()
 
 
 if __name__ == "__main__":
-    # TODO попробовать сделать без асинхра и понять в чем разница
     asyncio.run(main())

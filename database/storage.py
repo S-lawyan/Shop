@@ -97,7 +97,7 @@ class DataBaseService:
         :param value:
         :return:
         """
-        query = {"query": {"term": {field: value}}} # term - потому что нужно точное совпадение
+        query = {"query": {"term": {field: value}}}  # term - потому что нужно точное совпадение
         response = await self.search_es_query(index=self.trader_index, query=query)
         return True if len(response["hits"]["hits"]) > 0 else False
 
@@ -126,7 +126,12 @@ class DataBaseService:
             "trader_id": product.trader_id
         }
         await self.indexing_es_query(index=self.products_index, document_data=document_data)
-        logger.info(f"""Пользователем {product.trader_id} добавлен новый товар\n{product.article}\n{product.product_name}\n{product.price}\n{product.quantity}""")
+        logger.info(
+            f"""
+            Пользователем {product.trader_id} добавлен новый товар\n{product.article}\n
+            {product.product_name}\n{product.price}\n{product.quantity}
+            """
+        )
 
     async def delete_product(self, article: int) -> None:
         """
@@ -187,5 +192,3 @@ def pars_product(product: dict) -> Product:
 
 
 es = DataBaseService(config)
-
-

@@ -2,7 +2,6 @@ import os
 from loguru import logger
 from string import Template
 import yaml
-from bot.config import config
 
 
 class Glossary:

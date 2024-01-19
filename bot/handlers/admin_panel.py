@@ -72,7 +72,10 @@ async def quantity_to_finish(message: types.Message, state: FSMContext):
         product.trader_id = message.from_user.id
         await es.save_product(product=product)
         await state.finish()
-        await message.answer(text=glossary.get_phrase("product_is_added", article=article), reply_markup=admin_panel_main)
+        await message.answer(
+            text=glossary.get_phrase("product_is_added", article=article),
+            reply_markup=admin_panel_main
+        )
     except Exception as exc:
         logger.error(f"Ошибка при вводе количества товара : {exc}")
         await message.answer(text=glossary.get_phrase("uncorrected_enter"))
@@ -84,7 +87,7 @@ async def delete_product(message: types.Message):
     await TraderStates.delete_product.set()
 
 
-async def get_article_for_delete_product(message: types.Message, state: FSMContext):
+async def get_article_for_delete_product(message: types.Message):
     try:
         article = int(message.text)
         if not await es.check_in_products_index(field="article", value=article):
@@ -92,12 +95,12 @@ async def get_article_for_delete_product(message: types.Message, state: FSMConte
         else:
             await es.delete_product(article=int(article))
             await message.answer(text=glossary.get_phrase("success_delete"), reply_markup=admin_panel_main)
-    except Exception:
+    except (Exception,):
         await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
 
 
 # Editing position
-async def editing_product(message: types.Message, state: FSMContext):
+async def editing_product(message: types.Message):
     await message.answer(text=glossary.get_phrase("edit_product"), reply_markup=kb_cancel)
     await TraderStates.edit_product.set()
 
@@ -111,11 +114,11 @@ async def get_article_for_editing(message: types.Message, state: FSMContext):
             await message.reply(text=glossary.get_phrase("parameter_selection"), reply_markup=kb_parameter_selection)
             await state.update_data(article=article)
             await TraderStates.editing_product.set()
-    except:
+    except (Exception,):
         await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
 
 
-async def editing(message: types.Message, state: TraderStates.editing_product):
+async def editing(message: types.Message):
     try:
         if message.text == "Изменить цену":
             await message.answer(text=glossary.get_phrase("new_price"))
@@ -138,7 +141,7 @@ async def editing_new_price(message: types.Message, state: TraderStates.wait_pri
         await state.finish()
     except DocumentIsNotExist:
         await message.answer(text=glossary.get_phrase("updating_errors"), reply_markup=kb_cancel)
-    except Exception:
+    except (Exception,):
         await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
 
 
@@ -151,12 +154,12 @@ async def editing_new_count(message: types.Message, state: TraderStates.wait_cou
         await state.finish()
     except DocumentIsNotExist:
         await message.answer(text=glossary.get_phrase("updating_errors"), reply_markup=kb_cancel)
-    except Exception:
+    except (Exception,):
         await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
 
 
 # Show the product list
-async def show_products_list(message: types.Message, state: FSMContext):
+async def show_products_list(message: types.Message):
     products_poll: list[Product] = await es.get_trader_products(trader_id=int(message.from_user.id))
     if len(products_poll) == 0:
         await message.answer(text=glossary.get_phrase("empty_product_list"))
@@ -172,7 +175,13 @@ async def previous_page(call: types.CallbackQuery):
     page = int(call.data.split(":")[1]) - 1 if int(call.data.split(":")[1]) > 0 else 0
     message_text = await send_products_list(products_list=products_poll, page=page)
     try:
-        await call.message.edit_text(text=message_text, reply_markup=await pagination(total_pages=total_pages, page=page))
+        await call.message.edit_text(
+            text=message_text,
+            reply_markup=await pagination(
+                total_pages=total_pages,
+                page=page
+            )
+        )
     except (IndexError, KeyError):
         pass
 
@@ -183,7 +192,13 @@ async def next_page(call: types.CallbackQuery):
     page = int(call.data.split(":")[1]) + 1 if int(call.data.split(":")[1]) < (total_pages-1) else (total_pages-1)
     message_text = await send_products_list(products_list=products_poll, page=page)
     try:
-        await call.message.edit_text(text=message_text, reply_markup=await pagination(total_pages=total_pages, page=page))
+        await call.message.edit_text(
+            text=message_text,
+            reply_markup=await pagination(
+                total_pages=total_pages,
+                page=page
+            )
+        )
     except (IndexError, KeyError):
         pass
 
@@ -225,7 +240,11 @@ def register_handlers_admin_panel(dp: Dispatcher):
     # Deleting product
     dp.register_message_handler(delete_product, commands=["dell"], state=None)
     dp.register_message_handler(delete_product, Text(equals='Удалить позицию'), state=None)
-    dp.register_message_handler(get_article_for_delete_product, content_types=types.ContentType.TEXT, state=TraderStates.delete_product)
+    dp.register_message_handler(
+        get_article_for_delete_product,
+        content_types=types.ContentType.TEXT,
+        state=TraderStates.delete_product
+    )
     # Editing position
     dp.register_message_handler(editing_product, Text(equals='Изменить позицию', ignore_case=True), state=None)
     dp.register_message_handler(get_article_for_editing, content_types=types.ContentType.TEXT,
