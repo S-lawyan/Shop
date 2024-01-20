@@ -50,7 +50,7 @@ async def generate_article() -> int:
 
 
 async def generate_page_product(products: list[Product]) -> str:
-    message: str = "<u>📋 Список товаров</u>:\n\n"
+    message: str = "<u>📋 Результат выполнения запроса</u>:\n\n"
     for product in products:
         line = f"""🔹<b>{product.product_name}</b>\nЦена: <b>{product.price} ₽</b>\nКоличество: <b>{product.quantity}</b>\nАртикул: <code>{product.article}</code>\n\n"""
         message += line

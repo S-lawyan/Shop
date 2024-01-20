@@ -8,6 +8,7 @@ from loguru import logger
 class BotConfig(BaseModel):
     bot_token: SecretStr
     channel_id: int
+    channel_url: str
     per_page: int
 
 
