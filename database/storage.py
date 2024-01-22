@@ -3,7 +3,7 @@ from bot.config import Settings
 from bot.config import config
 from loguru import logger
 
-from bot.utils.exceptions import ErrorExecutingESQuery, DocumentIsNotExist
+from bot.utils.exceptions import ErrorExecutingESQuery
 from bot.utils.models import Product
 
 from elasticsearch import AsyncElasticsearch
@@ -202,6 +202,3 @@ def pars_product(product: dict) -> Product:
     _product.article = int(source["article"])
     _product.trader_id = int(source["trader_id"])
     return _product
-
-
-es = DataBaseService(config)

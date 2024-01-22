@@ -1,12 +1,13 @@
-import asyncio
-
+from bot.service import dp
 from loguru import logger
-from bot.service import BotService
-from config import config
-from database.storage import es
+from bot.service import es
+from aiogram import executor
+from bot import filters
+import bot.handlers
 
 
-async def main():
+async def on_startup(dp):
+    logger.warning("Starting bot...")
     logger.add(
         "bot/logs/avia_bot_{time:YYYY-MM-DD}.log",
         rotation="1 day",
@@ -14,13 +15,19 @@ async def main():
         compression="zip",
         level="DEBUG",
     )
-    bot = BotService(config)
-    try:
-        await es.es_healthcheck()
-        await bot.start_bot()
-    finally:
-        await bot.stop_bot()
+    await es.es_healthcheck()
+    logger.warning("The bot is started!")
+
+
+async def on_shutdown(dp):
+    await dp.storage.close()
+    logger.warning("The bot is stop!")
+
+
+def main():
+    filters.setup(dp=dp)
+    executor.start_polling(dp, on_startup=on_startup, on_shutdown=on_shutdown, skip_updates=True)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

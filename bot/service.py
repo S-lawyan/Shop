@@ -1,23 +1,15 @@
-from bot.config import Settings
+import asyncio
+
 from aiogram.dispatcher import Dispatcher
 from aiogram import Bot, types
-from loguru import logger
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from bot.handlers import client, chat
+from config import config
+from database.storage import DataBaseService
+# from aiogram.contrib.fsm_storage.redis import RedisStorage2
 
 
-class BotService:
-    def __init__(self, config: Settings):
-        self.bot = Bot(token=config.bot.bot_token.get_secret_value(), parse_mode=types.ParseMode.HTML)
-        self.dp = Dispatcher(self.bot, storage=MemoryStorage())
-
-    async def start_bot(self) -> None:
-        await self.dp.skip_updates()
-        # admin.register_handlers_admin(self.dp)
-        client.register_handlers_client(self.dp)
-        chat.register_handlers_chat(self.dp)
-        logger.warning("The bot is running!")
-        await self.dp.start_polling(self.bot)
-
-    async def stop_bot(self) -> None:
-        self.dp.stop_polling()
+es = DataBaseService(config)
+bot = Bot(token=config.bot.bot_token.get_secret_value(), parse_mode=types.ParseMode.HTML)
+loop = asyncio.get_event_loop()
+# storage = RedisStorage2(host="localhost", port=6379, db=5, loop=loop)
+dp = Dispatcher(bot, storage=MemoryStorage())
