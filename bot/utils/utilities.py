@@ -25,7 +25,7 @@ async def get_data(key: str, state: FSMContext):
 
 
 async def generate_page_product(products: list[Product]) -> str:
-    message: str = "<u>📋 Результат выполнения запроса</u>:\n\n"
+    message: str = f"""<u>Результат запроса</u>:\n\n"""
     for product in products:
         line = f"""🔹<b>{product.product_name}</b>\nЦена: <b>{product.price} ₽</b>\nКоличество: <b>{product.quantity}</b>\nАртикул: <code>{product.article}</code>\n<a href="tg://user?id={product.trader_id}">Написать продавцу</a>\n\n"""
         message += line

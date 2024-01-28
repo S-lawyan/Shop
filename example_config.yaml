@@ -1,0 +1,27 @@
+bot:
+  # client-token
+  bot_token: ""
+  # client-channel-id
+  channel_id: -123456
+  channel_url: "https://t.me/"
+  # количество товаров в одном сообщении
+  per_page: 5
+
+es:
+  es_host: "localhost"
+  es_port: 9200
+  es_user: "username"
+  es_pass: "password"
+  es_connections_limit: 50
+  connection_attempt: 13
+  # indexes
+  products: "index_name"
+  consumers: "index_name"
+  traders: "index_name"
+
+redis:
+  redis_host: "localhost"
+  redis_port: 6379
+  redis_user: ""
+  redis_pass: "password"
+  connections_limit: 50
