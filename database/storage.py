@@ -12,8 +12,8 @@ from elasticsearch import AsyncElasticsearch
 class DataBaseService:
     def __init__(self, _config: Settings):
         self.config = _config
-        self.trader_index = "traders-2024-01-01"
-        self.products_index = "products-2024-01-01"
+        self.trader_index = _config.es.traders
+        self.products_index = _config.es.products
         self.elasticsearch_config = {
             "hosts": [f"http://{self.config.es.es_host}:{self.config.es.es_port}"],
             "basic_auth": (self.config.es.es_user, self.config.es.es_pass.get_secret_value()),

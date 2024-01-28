@@ -37,7 +37,7 @@ get_price: |
   Ок. Теперь <b>стоимость</b> в рублях (Без точек, пробелов и валюты)
 get_quantity: |
   Ок. Укажи <b>количество</b> (Число, либо "нет")
-product_is_added: Позиция успешно добавлена (<code>{$article</code>) ✅
+product_is_added: Позиция успешно добавлена (<code>$article</code>) ✅
 uncorrected_enter: Некорректный ввод, повторите попытку ❌
 updating_errors: Ошибка обновления ❌
 delete_product: Отправь <b>артикул</b> позиции для удаления ⚠️

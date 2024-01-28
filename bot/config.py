@@ -18,6 +18,9 @@ class ESConfig(BaseModel):
     es_pass: SecretStr
     es_connections_limit: int
     connection_attempt: int
+    products: str
+    traders: str
+    consumers: str
 
     def get_mysql_uri(self) -> str:
         uri_template = "mysql+asyncmy://{user}:{password}@{host}:{port}/{db_name}"
