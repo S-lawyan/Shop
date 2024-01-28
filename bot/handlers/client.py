@@ -7,7 +7,6 @@ from bot.utils import utilities as utl
 from aiogram.dispatcher.filters import Text
 from bot.service import dp, es
 from bot.filters import IsDirect
-# from aiogram.dispatcher.filters import ChatTypeFilter
 
 
 class TraderStates(StatesGroup):
@@ -29,9 +28,16 @@ async def command_start(message: types.Message) -> None:
         )
 
 
-@dp.message_handler(IsDirect(), commands=["help"], content_types=Text(startswith='помощь', ignore_case=True), state='*')
+@dp.message_handler(IsDirect(), commands=["help"], state='*')
+@dp.message_handler(IsDirect(), Text(startswith="помощь", ignore_case=True), state='*')
 async def command_help_message(message: types.Message) -> None:
     await message.answer(text=glossary.get_phrase("help"))
+
+
+@dp.message_handler(IsDirect(), commands=["chat"], state='*')
+@dp.message_handler(IsDirect(), Text(startswith="чат", ignore_case=True), state='*')
+async def get_chat_link(message: types.Message) -> None:
+    await message.answer(text=glossary.get_phrase("chat_link"), reply_markup=chat_link_kb)
 
 
 # ================= БЛОК РЕГИСТРАЦИИ НОВОГО CONSUMER-a ==============================
@@ -61,6 +67,6 @@ async def get_fio_finish_registration(message: types.Message, state: FSMContext)
         await message.answer(text=glossary.get_phrase("bad_fio"))
 
 
-@dp.message_handler(IsDirect(), commands=["chat"], content_types=Text(startswith='чат', ignore_case=True), state='*')
-async def get_chat_link(message: types.Message) -> None:
-    await message.answer(text=glossary.get_phrase("chat_link"), reply_markup=chat_link_kb)
+@dp.message_handler(IsDirect(), content_types=types.ContentType.ANY, state=None)
+async def unknown_event(message: types.Message) -> None:
+    await message.answer(text=glossary.get_phrase("unknown_event"))

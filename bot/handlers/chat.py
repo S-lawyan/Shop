@@ -5,17 +5,18 @@ from aiogram.utils.exceptions import MessageNotModified
 from bot.utils.models import Product
 from bot.glossaries.glossary import glossary
 from bot.utils import utilities as utl
-# from bot.config import config
+from bot.config import config
 import math
-from bot.keyboards.client_kb import *
+from bot.keyboards.client_kb import pagination
 from loguru import logger
 from bot.filters import IsGroup, IsDirect
-from bot.service import dp, bot, es
+from bot.service import dp, bot, es, redis
 
 
 @dp.message_handler(IsGroup(), content_types=types.ContentType.TEXT, state='*')
 async def query_messages(message: types.Message, state: FSMContext):
     request = str(message.text)
+    # products_poll: list[Product] = await get_products_poll_from_storage(request=request)
     products_poll: list[Product] = await es.execute_query(request=request)
     if len(products_poll) == 0:
         await bot.send_message(
@@ -30,8 +31,80 @@ async def query_messages(message: types.Message, state: FSMContext):
             text=message_text,
             reply_markup=await pagination(total_pages=total_pages),
         )
-        # TODO Может быть сделать отдельно функцию, которая будет считать время жизни каждого такого сообщения
-        #  и через время удалять его из state, чтобы не переполнять ОЗУ
+        # Сохраняется конкретный pool для конкретного сообщения
+        await redis.set_data(key=f"{message.from_user.id}:{personal_message.message_id}", value=request, ttl=5)  # 720
+
+
+@dp.callback_query_handler(IsDirect(), lambda query: query.data.startswith("previous:"), state=None)
+async def previous_page(call: types.CallbackQuery, state: FSMContext):
+    # Redis
+    # products_poll: list[Product] = await get_products_poll_from_cash(key=f"{call.message.chat.id}:{call.message.message_id}")
+    request: str = await redis.get_data(key=f"{call.message.chat.id}:{call.message.message_id}")
+    if request:
+        products_poll: list[Product] = await es.execute_query(request=request)
+        total_pages: int = math.ceil(len(products_poll) / int(config.bot.per_page))
+        page = int(call.data.split(":")[1]) - 1 if int(call.data.split(":")[1]) > 0 else 0
+        message_text = await send_products_list(products_list=products_poll, page=page)
+        try:
+            await call.message.edit_text(
+                text=message_text,
+                reply_markup=await pagination(
+                    total_pages=total_pages,
+                    page=page
+                )
+            )
+        except (IndexError, KeyError):
+            pass
+    else:
+        await call.message.edit_text(text=glossary.get_phrase("ttl_is_over"), reply_markup=None)
+
+
+@dp.callback_query_handler(IsDirect(), lambda query: query.data.startswith("next:"), state=None)
+async def next_page(call: types.CallbackQuery, state: FSMContext):
+    # Redis
+    # products_poll: list[Product] = await get_products_poll_from_cash(key=f"{call.message.chat.id}:{call.message.message_id}")
+    request: str = await redis.get_data(key=f"{call.message.chat.id}:{call.message.message_id}")
+    if request:
+        products_poll: list[Product] = await es.execute_query(request=request)
+        total_pages: int = math.ceil(len(products_poll) / int(config.bot.per_page))
+        page = int(call.data.split(":")[1]) + 1 if int(call.data.split(":")[1]) < (total_pages-1) else (total_pages-1)
+        message_text = await send_products_list(products_list=products_poll, page=page)
+        try:
+            await call.message.edit_text(
+                text=message_text,
+                reply_markup=await pagination(
+                    total_pages=total_pages,
+                    page=page
+                )
+            )
+        except (IndexError, KeyError):
+            pass
+    else:
+        await call.message.edit_text(text=glossary.get_phrase("ttl_is_over"), reply_markup=None)
+
+
+@dp.errors_handler(exception=MessageNotModified)
+async def message_not_modified_handler(update: types.Update, error):
+    await update.callback_query.answer()
+    logger.error(error)
+    return True
+
+
+# async def get_products_poll_from_storage(request: str) -> list[Product]:
+#     pool_from_cash: list[Product] = await redis.get_data(key=request)
+#     if pool_from_cash is not None:
+#         # Запись есть в кеше, возвращаем оттуда
+#         return pool_from_cash
+#     else:
+#         # Записи нет в кеше - получение из es
+#         pool_from_es: list[Product] = await es.execute_query(request=request)
+#         # TODO ЧТО ЕСЛИ СПИСОК ТОВАРОВ ПУСТ ????
+#         await redis.set_data(key=request, value=pool_from_es, ttl=15)
+#         return pool_from_es
+
+
+# async def get_products_poll_from_cash(key: str) -> list:
+#     return await redis.get_data(key=key)
 
 
 async def send_products_list(products_list: list[Product], page: int = 0) -> str:
@@ -40,52 +113,3 @@ async def send_products_list(products_list: list[Product], page: int = 0) -> str
     end_index: int = start_index + per_page
     products_on_page: list[Product] = products_list[start_index:end_index]
     return await utl.generate_page_product(products=products_on_page)
-
-
-@dp.callback_query_handler(IsDirect(), lambda query: query.data.startswith("previous:"), state=None)
-async def previous_page(call: types.CallbackQuery, state: FSMContext):
-    products_poll: list[Product] = await es.execute_query(trader_id=int(call.from_user.id))
-    total_pages: int = math.ceil(len(products_poll) / int(config.bot.per_page))
-    page = int(call.data.split(":")[1]) - 1 if int(call.data.split(":")[1]) > 0 else 0
-    message_text = await send_products_list(products_list=products_poll, page=page)
-    try:
-        await call.message.edit_text(
-            text=message_text,
-            reply_markup=await pagination(
-                total_pages=total_pages,
-                page=page
-            )
-        )
-    except (IndexError, KeyError):
-        pass
-
-
-@dp.callback_query_handler(IsDirect(), lambda query: query.data.startswith("next:"), state=None)
-async def next_page(call: types.CallbackQuery, state: FSMContext):
-    products_poll: list[Product] = await es.execute_query(trader_id=call.from_user.id)
-    data = await state.get_data()
-    products_poll: list[Product] = data.get(f"{call.message.message_id}_{call.message.chat.id}")
-    total_pages: int = math.ceil(len(products_poll) / int(config.bot.per_page))
-    page = int(call.data.split(":")[1]) + 1 if int(call.data.split(":")[1]) < (total_pages-1) else (total_pages-1)
-    message_text = await send_products_list(products_list=products_poll, page=page)
-    try:
-        await call.message.edit_text(
-            text=message_text,
-            reply_markup=await pagination(
-                total_pages=total_pages,
-                page=page
-            )
-        )
-    except (IndexError, KeyError):
-        pass
-
-
-@dp.errors_handler(IsDirect(), exception=MessageNotModified)
-async def message_not_modified_handler(update: types.Update, error):
-    await update.callback_query.answer()
-    logger.error(error)
-    return True
-
-# TODO на месте флажков нужно сделать получение пулла продуктов из БД sqlite3, думаю.
-#  Либо Redis, который нужно отдельно изучать. Скорее первое.
-#  Далее сделать механизм удаления старых сообщений из личного чата по истечении времени, чтобы "от дурака".

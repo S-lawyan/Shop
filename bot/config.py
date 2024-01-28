@@ -19,6 +19,9 @@ class ESConfig(BaseModel):
     es_pass: SecretStr
     es_connections_limit: int
     connection_attempt: int
+    products: str
+    consumers: str
+    traders: str
 
     def get_mysql_uri(self) -> str:
         uri_template = "mysql+asyncmy://{user}:{password}@{host}:{port}/{db_name}"
@@ -31,8 +34,29 @@ class ESConfig(BaseModel):
         )
 
 
+class RedisConfig(BaseModel):
+    redis_host: str
+    redis_port: int
+    redis_user: str
+    redis_pass: SecretStr
+    connections_limit: int
+    #ttl: int
+
+    def get_redis_url(self) -> str:
+        redis_url: str = "redis://{user}:{password}@{host}:{port}/0"
+        # "redis://[[user]:[password]]@host:port/1"
+        # f"redis://{self.config.redis.redis_user}:{self.config.redis.redis_pass.get_secret_value()}@{self.config.redis.redis_host}:{self.config.redis.redis_port}/0",
+        return redis_url.format(
+            user=self.redis_user,
+            password=self.redis_pass.get_secret_value(),
+            host=self.redis_host,
+            port=self.redis_port
+        )
+
+
 class Settings(BaseModel):
     es: ESConfig
+    redis: RedisConfig
     bot: BotConfig
 
 

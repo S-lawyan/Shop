@@ -12,8 +12,8 @@ from elasticsearch import AsyncElasticsearch
 class DataBaseService:
     def __init__(self, _config: Settings):
         self.config = _config
-        self.consumer_index = "consumers-2024.01.19-000001"
-        self.products_index = "products-2024.01.18-000001"
+        self.consumer_index = _config.es.consumers
+        self.products_index = _config.es.products
         self.elasticsearch_config = {
             "hosts": [f"http://{self.config.es.es_host}:{self.config.es.es_port}"],
             "basic_auth": (self.config.es.es_user, self.config.es.es_pass.get_secret_value()),
@@ -100,100 +100,36 @@ class DataBaseService:
         return True if len(response["hits"]["hits"]) > 0 else False
 
     async def execute_query(self, request: str):
+        # query: dict = {
+        #     "query": {
+        #         "match": {
+        #             "product_name": {
+        #                 "query": f"{request}",
+        #                 "analyzer": "product_name_analizer"
+        #             }
+        #         }
+        #     }
+        # }
         query: dict = {
             "query": {
-                "match": {
-                    "product_name": {
-                        "query": f"{request}",
-                        "analyzer": "product_name_analizer"
-                    }
+                "query_string": {
+                    "default_field": "product_name",
+                    "default_operator": "AND",
+                    "query": request
                 }
-            }
+            },
+            "size": 200
         }
         response = await self.search_es_query(index=self.products_index, query=query)
-        documents = await pars_products(response=response["hits"]["hits"])
+        documents = await _pars_products(response=response["hits"]["hits"])
         return documents
 
-    # async def check_in_products_index(self, field: str, value: int | str):
-    #     """
-    #
-    #     :param field:
-    #     :param value:
-    #     :return:
-    #     """
-    #     query = {"query": {"term": {field: value}}}
-    #     response = await self.search_es_query(index=self.products_index, query=query)
-    #     return True if len(response["hits"]["hits"]) > 0 else False
-    #
-    # async def save_product(self, product: Product) -> None:
-    #     """
-    #
-    #     :param product:
-    #     :return:
-    #     """
-    #     document_data = {
-    #         "article": product.article,
-    #         "count": product.quantity,
-    #         "price": product.price,
-    #         "product_name": product.product_name,
-    #         "trader_id": product.trader_id
-    #     }
-    #     await self.indexing_es_query(index=self.products_index, document_data=document_data)
-    #     logger.info(
-    #         f"""
-    #         Пользователем {product.trader_id} добавлен новый товар\n{product.article}\n
-    #         {product.product_name}\n{product.price}\n{product.quantity}
-    #         """
-    #     )
-    #
-    # async def delete_product(self, article: int) -> None:
-    #     """
-    #
-    #     :param article:
-    #     :return:
-    #     """
-    #     document_data = {
-    #         "article": article,
-    #     }
-    #     await self.delete_es_query(index=self.products_index, document_data=document_data)
-    #     logger.info(f"Товар {article} удален.")
-    #
-    # async def update_product_document(self, article: str, update_field: str, update_value: int | str):
-    #     """
-    #
-    #     :param article:
-    #     :param update_field:
-    #     :param update_value:
-    #     :return:
-    #     """
-    #     query = {"query": {"term": {"article": article}}}
-    #     response = await self.search_es_query(index=self.products_index, query=query)
-    #     if response.get("hits", {}).get("hits"):
-    #         doc_id = response["hits"]["hits"][0]["_id"]
-    #         update_data = {"doc": {update_field: update_value}}
-    #         await self.update_es_query(index=self.products_index, doc_id=doc_id, document_data=update_data)
-    #         logger.info(f"Поле {update_field} в документе с article={article} успешно обновлено.")
-    #     else:
-    #         logger.warning(f"Документ с article={article} не был найден.")
-    #         raise DocumentIsNotExist()
-    #
-    # async def get_trader_products(self, trader_id: int) -> list:
-    #     """
-    #
-    #     :param trader_id:
-    #     :return:
-    #     """
-    #     query = {"query": {"term": {"trader_id": trader_id}}}
-    #     response = await self.search_es_query(index=self.products_index, query=query)
-    #     documents = await pars_products(response=response["hits"]["hits"])
-    #     return documents
+
+async def _pars_products(response: list[dict]) -> list[Product]:
+    return [_pars_product(product) for product in response]
 
 
-async def pars_products(response: list[dict]) -> list[Product]:
-    return [pars_product(product) for product in response]
-
-
-def pars_product(product: dict) -> Product:
+def _pars_product(product: dict) -> Product:
     _product = Product()
     source: dict = product["_source"]
     _product.product_name = str(source["product_name"])

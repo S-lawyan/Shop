@@ -10,3 +10,7 @@ class ErrorExecutingESQuery(Exception):
 
 class DocumentIsNotExist(Exception):
     pass
+
+
+class ErrorConnectRedis(Exception):
+    pass
