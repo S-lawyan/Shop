@@ -49,6 +49,11 @@ async def generate_article() -> int:
             return article
 
 
+async def preprocessing_price_list(price_list: str) -> list[Product]:
+    # TODO предобработка прайс-листа
+    pass
+
+
 async def generate_page_product(products: list[Product]) -> str:
     message: str = "<u>📋 Список товаров</u>:\n\n"
     for product in products:

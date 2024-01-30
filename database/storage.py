@@ -7,6 +7,8 @@ from bot.utils.exceptions import ErrorExecutingESQuery, DocumentIsNotExist
 from bot.utils.models import Product
 
 from elasticsearch import AsyncElasticsearch
+from elasticsearch.helpers import async_scan
+from elasticsearch.helpers import async_bulk
 
 
 class DataBaseService:
@@ -21,7 +23,7 @@ class DataBaseService:
             "verify_certs": False
         }
 
-    async def _get_elastic_instance(self):
+    async def _get_elastic_instance(self) -> AsyncElasticsearch:
         return AsyncElasticsearch(**self.elasticsearch_config)
 
     async def es_healthcheck(self) -> None:
@@ -49,7 +51,14 @@ class DataBaseService:
     async def search_es_query(self, index: str, query: dict = None):
         try:
             async with await self._get_elastic_instance() as elastic:
-                result = await elastic.search(index=index, body=query)
+                # result = await elastic.search(index=index, body=query)
+                result = []
+                async for doc in async_scan(
+                    client=elastic,
+                    index=index,
+                    query=query,
+                ):
+                    result.append(doc)
                 return result
         except Exception as exc:
             logger.error(f"Ошибка при поиске {index} запрос {query} : {exc}")
@@ -98,8 +107,8 @@ class DataBaseService:
         :return:
         """
         query = {"query": {"term": {field: value}}}  # term - потому что нужно точное совпадение
-        response = await self.search_es_query(index=self.trader_index, query=query)
-        return True if len(response["hits"]["hits"]) > 0 else False
+        response: list = await self.search_es_query(index=self.trader_index, query=query)
+        return True if len(response) > 0 else False
 
     async def check_in_products_index(self, field: str, value: int | str):
         """
@@ -109,8 +118,8 @@ class DataBaseService:
         :return:
         """
         query = {"query": {"term": {field: value}}}
-        response = await self.search_es_query(index=self.products_index, query=query)
-        return True if len(response["hits"]["hits"]) > 0 else False
+        response: list = await self.search_es_query(index=self.products_index, query=query)
+        return True if len(response) > 0 else False
 
     async def save_product(self, product: Product) -> None:
         """
@@ -155,13 +164,13 @@ class DataBaseService:
         """
         query = {"query": {"term": {"article": article}}}
         response = await self.search_es_query(index=self.products_index, query=query)
-        if response.get("hits", {}).get("hits"):
-            doc_id = response["hits"]["hits"][0]["_id"]
+        if response[0]["_source"]:
+            doc_id = response[0]["_id"]
             update_data = {"doc": {update_field: update_value}}
             await self.update_es_query(index=self.products_index, doc_id=doc_id, document_data=update_data)
             logger.info(f"Поле {update_field} в документе с article={article} успешно обновлено.")
         else:
-            logger.warning(f"Документ с article={article} не был найден.")
+            logger.error(f"Документ с article={article} не был найден.")
             raise DocumentIsNotExist()
 
     async def get_trader_products(self, trader_id: int) -> list:
@@ -172,8 +181,31 @@ class DataBaseService:
         """
         query = {"query": {"term": {"trader_id": trader_id}}}
         response = await self.search_es_query(index=self.products_index, query=query)
-        documents = await pars_products(response=response["hits"]["hits"])
+        documents = await pars_products(response=response)
         return documents
+
+    async def save_bulk_products(self, products: list[Product]) -> None:
+        try:
+            actions: list = []
+            for product in products:
+                actions.append(
+                    {
+                        "product_name": product.product_name,
+                        "price": product.price,
+                        "article": product.article,
+                        "count": product.quantity,
+                        "trader_id": product.trader_id
+                    }
+                )
+            elastic: AsyncElasticsearch = await self._get_elastic_instance()
+            response = await async_bulk(
+                client=elastic,
+                index="",
+                actions=actions
+            )
+            logger.info(f"Успешно проиндексировано документов : {len(products)}")
+        except (Exception,) as exc:
+            logger.error(f"Ошибка добавление позиций bulk : {exc}")
 
 
 async def pars_products(response: list[dict]) -> list[Product]:

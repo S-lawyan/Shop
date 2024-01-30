@@ -1,3 +1,4 @@
+import openpyxl
 from aiogram import types
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
@@ -7,11 +8,14 @@ from bot.keyboards.client_kb import *
 from database.storage import es
 from bot.utils import utilities as utl
 from aiogram.dispatcher.filters import Text
+from bot.utils.models import Product
 
 
 class TraderStates(StatesGroup):
     get_shop_name = State()
     get_fio = State()
+    get_file = State()
+    get_price_list = State()
 
 
 # ================= БЛОК ОСНОВНЫХ КОМАНД БОТА ==============================
@@ -70,6 +74,42 @@ async def get_fio_to_tg_id(message: types.Message, state: FSMContext) -> None:
         await message.answer(text=glossary.get_phrase("bad_fio"))
 
 
+# Processing file
+async def get_products_from_file(message: types.Message, state: FSMContext) -> None:
+    await message.answer("Отправь мне файл в формате .xlsx", reply_markup=kb_cancel)
+    await TraderStates.get_file.set()
+
+
+async def process_file(message: types.Message, state: FSMContext) -> None:
+    products = []
+    wb = openpyxl.load_workbook(message.document.file_name)
+    sheet = wb.active
+    for row in sheet.iter_rows(min_row=2, values_only=True):
+        product = Product()
+        product.product_name = row[0]
+        product.price = float(row[1])
+        if isinstance(row[2], str):
+            product.quantity = None
+        else:
+            product.quantity = int(row[2])
+        products.append(product)
+    await es.save_bulk_products(products=products)
+    await state.finish()
+
+
+# Processing big message
+async def get_products_from_price(message: types.Message, state: FSMContext) -> None:
+    await message.answer("Отправь прайс-лист", reply_markup=kb_cancel)
+    await TraderStates.get_price_list.set()
+
+
+async def process_price(message: types.Message, state: FSMContext) -> None:
+    price_list = message.text
+    products: list[Product] = await utl.preprocessing_price_list(price_list=price_list)
+    await es.save_bulk_products(products=products)
+    await state.finish()
+
+
 def register_handlers_client(dp: Dispatcher):
     # start
     dp.register_message_handler(command_start, commands=["start"], state=None)
@@ -85,3 +125,11 @@ def register_handlers_client(dp: Dispatcher):
                                 state=TraderStates.get_shop_name)
     dp.register_message_handler(get_fio_to_tg_id, content_types=types.ContentType.TEXT,
                                 state=TraderStates.get_fio)
+    # process file
+    dp.register_message_handler(get_products_from_file, Text(equals='загрузить файлом', ignore_case=True), state=None)
+    dp.register_message_handler(get_products_from_file, commands=["file"], content_types=types.ContentType.TEXT, state=None)
+    dp.register_message_handler(process_file, content_types=["document"], state=TraderStates.get_file)
+    # process mass
+    dp.register_message_handler(get_products_from_price, Text(equals='загрузить прайс', ignore_case=True), state=None)
+    dp.register_message_handler(get_products_from_price, commands=["price"], content_types=types.ContentType.TEXT, state=None)
+    dp.register_message_handler(process_price, content_types=types.ContentType.TEXT, state=TraderStates.get_price_list)

@@ -230,7 +230,7 @@ def register_handlers_admin_panel(dp: Dispatcher):
     dp.register_message_handler(show_admin_panel_message, Text(startswith='меню', ignore_case=True), state=None)
     # Adding product
     dp.register_message_handler(add_product, commands=["add"], state=None)
-    dp.register_message_handler(add_product, Text(equals='Добавить позицию'), state=None)
+    dp.register_message_handler(add_product, Text(equals='Добавить 1 позицию'), state=None)
     dp.register_message_handler(product_name_to_price, content_types=types.ContentType.TEXT,
                                 state=TraderStates.get_product_name)
     dp.register_message_handler(price_to_quantity, content_types=types.ContentType.TEXT,

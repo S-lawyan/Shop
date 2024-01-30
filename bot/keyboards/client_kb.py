@@ -6,11 +6,13 @@ kb_registration.add(InlineKeyboardButton(text="Зарегистрировать�
 
 
 product_list = KeyboardButton(text="Список позиций 📋", command='show_product_list')
-add_product = KeyboardButton(text="Добавить позицию", command='add_product')
+add_product = KeyboardButton(text="Добавить 1 позицию", command='add_product')
 edit_product = KeyboardButton(text="Изменить позицию", command='edit_product')
 delete_product = KeyboardButton(text="Удалить позицию", command='delete_product')
 btn_help = KeyboardButton(text="Помощь 🆘", command='help')
-admin_panel_main = ReplyKeyboardMarkup(resize_keyboard=True).add(product_list, add_product).add(edit_product, delete_product).add(btn_help)
+btn_add_file = KeyboardButton(text="Загрузить файлом", command="file")
+btn_add_big_message = KeyboardButton(text="Загрузить прайс", command="price")
+admin_panel_main = ReplyKeyboardMarkup(resize_keyboard=True).add(product_list, add_product).add(edit_product, delete_product).add(btn_add_file, btn_add_big_message).add(btn_help)
 
 
 btn_cancel = KeyboardButton(text="Отмена", command='cancel')
