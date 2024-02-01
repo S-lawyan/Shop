@@ -1,3 +1,6 @@
+import io
+
+import aiofiles
 import openpyxl
 from aiogram import types
 from aiogram import Dispatcher
@@ -82,18 +85,24 @@ async def get_products_from_file(message: types.Message, state: FSMContext) -> N
 
 async def process_file(message: types.Message, state: FSMContext) -> None:
     products = []
-    wb = openpyxl.load_workbook(message.document.file_name)
+    file = await message.document.download()
+    async with aiofiles.open(file.name, mode='rb') as f:
+        file_content = io.BytesIO(await f.read())
+    wb = openpyxl.load_workbook(file_content)
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2, values_only=True):
         product = Product()
         product.product_name = row[0]
         product.price = float(row[1])
-        if isinstance(row[2], str):
+        if int(row[2]) == 0:
             product.quantity = None
         else:
             product.quantity = int(row[2])
+        product.trader_id = int(message.from_user.id)
+        product.article = await utl.generate_article()
         products.append(product)
     await es.save_bulk_products(products=products)
+    await message.answer(glossary.get_phrase("success_insert_price", correct_rows=len(products)))
     await state.finish()
 
 
@@ -106,8 +115,10 @@ async def get_products_from_price(message: types.Message, state: FSMContext) -> 
 async def process_price(message: types.Message, state: FSMContext) -> None:
     price_list = message.text
     products, uncorrected_rows = await utl.preprocessing_price_list(price_list=price_list, trader=message.from_user.id)
-    # TODO Вывод корректного занесения правильных строк и отправка кривых строк
     await es.save_bulk_products(products=products)
+    msg = await utl.generate_message_with_uncorrected_rows(rows=uncorrected_rows)
+    await message.answer(text=msg)
+    await message.answer(text=glossary.get_phrase("success_insert_price", correct_rows=len(products)), reply_markup=admin_panel_main)
     await state.finish()
 
 

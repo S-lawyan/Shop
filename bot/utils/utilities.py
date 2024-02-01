@@ -55,14 +55,15 @@ async def preprocessing_price_list(price_list: str, trader: int):
     products_correct = []
     uncorrected_rows = []
     price_list_split = price_list.split("\n")
+    price_list_split = [x for x in price_list_split if x.strip()]
     for row in price_list_split:
         _product = Product()
         _row = row.split("-")
         try:
-            _product.product_name = str(_row[0])
-            _product.price = float(_row[1])
-            _product.quantity = int(_row[2])
-            _product.article = int(generate_article())
+            _product.product_name = str(_row[0].strip())
+            _product.price = float(_row[1].strip().replace(".", "").replace(",", ""))
+            _product.quantity = int(_row[2].strip()) if int(_row[2].strip()) != 0 else None
+            _product.article = await generate_article()
             _product.trader_id = int(trader)
             products_correct.append(_product)
         except (Exception,) as exc:
@@ -76,4 +77,11 @@ async def generate_page_product(products: list[Product]) -> str:
     for product in products:
         line = f"""🔹<b>{product.product_name}</b>\nЦена: <b>{product.price} ₽</b>\nКоличество: <b>{product.quantity}</b>\nАртикул: <code>{product.article}</code>\n\n"""
         message += line
+    return message
+
+
+async def generate_message_with_uncorrected_rows(rows: list):
+    message: str = """Некорректные строки:\n\n"""
+    for row in rows:
+        message += row+"\n"
     return message

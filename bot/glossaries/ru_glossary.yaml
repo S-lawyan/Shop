@@ -51,4 +51,5 @@ new_price: Отправь новую цену
 success_update_price: Цена успешно изменена ✅
 new_count: Отправь новое количество
 success_update_count: Количество успешно изменено ✅
+success_insert_price: Внесено $correct_rows строк ✅
 

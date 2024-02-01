@@ -186,27 +186,42 @@ class DataBaseService:
 
     async def save_bulk_products(self, products: list[Product]) -> None:
         try:
-            actions: list = []
             for product in products:
-                actions.append(
-                    {
-                        "product_name": product.product_name,
-                        "price": product.price,
-                        "article": product.article,
-                        "count": product.quantity,
-                        "trader_id": product.trader_id
-                    }
-                )
-            elastic: AsyncElasticsearch = await self._get_elastic_instance()
-            response = await async_bulk(
-                client=elastic,
-                index="",
-                actions=actions
-            )
-            # TODO посмотреть что возвращает список, возможно получится разделить успешные и неуспешные строки
+                document_data = {
+                    "product_name": product.product_name,
+                    "price": product.price,
+                    "article": product.article,
+                    "count": product.quantity,
+                    "trader_id": product.trader_id
+                }
+                await self.indexing_es_query(index=self.products_index, document_data=document_data)
             logger.info(f"Успешно проиндексировано документов : {len(products)}")
         except (Exception,) as exc:
             logger.error(f"Ошибка добавление позиций bulk : {exc}")
+
+    # async def save_bulk_products(self, products: list[Product]) -> None:
+    #     try:
+    #         actions: list = []
+    #         for product in products:
+    #             actions.append(
+    #                 {
+    #                     "product_name": product.product_name,
+    #                     "price": product.price,
+    #                     "article": product.article,
+    #                     "count": product.quantity,
+    #                     "trader_id": product.trader_id
+    #                 }
+    #             )
+    #         elastic: AsyncElasticsearch = await self._get_elastic_instance()
+    #         await async_bulk(
+    #             client=elastic,
+    #             index=self.products_index,
+    #             actions=actions
+    #         )
+    #         # TODO посмотреть что возвращает список, возможно получится разделить успешные и неуспешные строки
+    #         logger.info(f"Успешно проиндексировано документов : {len(products)}")
+    #     except (Exception,) as exc:
+    #         logger.error(f"Ошибка добавление позиций bulk : {exc}")
 
 
 async def pars_products(response: list[dict]) -> list[Product]:
