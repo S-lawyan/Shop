@@ -4,6 +4,7 @@ import random
 from aiogram.dispatcher import FSMContext
 from database.storage import es
 from bot.utils.models import Product
+from loguru import logger
 
 
 async def is_valid_name(name: str):
@@ -49,9 +50,25 @@ async def generate_article() -> int:
             return article
 
 
-async def preprocessing_price_list(price_list: str) -> list[Product]:
+async def preprocessing_price_list(price_list: str, trader: int):
     # TODO предобработка прайс-листа
-    pass
+    products_correct = []
+    uncorrected_rows = []
+    price_list_split = price_list.split("\n")
+    for row in price_list_split:
+        _product = Product()
+        _row = row.split("-")
+        try:
+            _product.product_name = str(_row[0])
+            _product.price = float(_row[1])
+            _product.quantity = int(_row[2])
+            _product.article = int(generate_article())
+            _product.trader_id = int(trader)
+            products_correct.append(_product)
+        except (Exception,) as exc:
+            logger.error(f"Ошибка при обработке строки прайс-листа : {exc}")
+            uncorrected_rows.append(row)
+    return products_correct, uncorrected_rows
 
 
 async def generate_page_product(products: list[Product]) -> str:

@@ -203,6 +203,7 @@ class DataBaseService:
                 index="",
                 actions=actions
             )
+            # TODO посмотреть что возвращает список, возможно получится разделить успешные и неуспешные строки
             logger.info(f"Успешно проиндексировано документов : {len(products)}")
         except (Exception,) as exc:
             logger.error(f"Ошибка добавление позиций bulk : {exc}")

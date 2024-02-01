@@ -105,7 +105,8 @@ async def get_products_from_price(message: types.Message, state: FSMContext) -> 
 
 async def process_price(message: types.Message, state: FSMContext) -> None:
     price_list = message.text
-    products: list[Product] = await utl.preprocessing_price_list(price_list=price_list)
+    products, uncorrected_rows = await utl.preprocessing_price_list(price_list=price_list, trader=message.from_user.id)
+    # TODO Вывод корректного занесения правильных строк и отправка кривых строк
     await es.save_bulk_products(products=products)
     await state.finish()
 
