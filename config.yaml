@@ -13,6 +13,6 @@ es:
   es_pass: "321"
   es_connections_limit: 50
   connection_attempt: 13
-  products: "products-2024.02.02-000001"
-  traders: "traders-2024.02.02-000001"
-  consumers: "consumers-2024.02.02-000001"
+  products: "products_alias"
+  traders: "traders_alias"
+  consumers: "consumers_alias"

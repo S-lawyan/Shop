@@ -87,7 +87,7 @@ async def delete_product(message: types.Message):
     await TraderStates.delete_product.set()
 
 
-async def get_article_for_delete_product(message: types.Message):
+async def get_article_for_delete_product(message: types.Message, state: FSMContext):
     try:
         article = int(message.text)
         if not await es.check_in_products_index(field="article", value=article):
@@ -95,6 +95,7 @@ async def get_article_for_delete_product(message: types.Message):
         else:
             await es.delete_product(article=int(article))
             await message.answer(text=glossary.get_phrase("success_delete"), reply_markup=admin_panel_main)
+            await state.finish()
     except (Exception,):
         await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
 
@@ -259,8 +260,8 @@ def register_handlers_admin_panel(dp: Dispatcher):
     dp.register_message_handler(show_products_list, commands=["list"], state=None)
     dp.register_message_handler(show_products_list, Text(startswith='Список позиций'), state=None)
     dp.register_callback_query_handler(previous_page, lambda query: query.data.startswith("previous:"),
-                                       state=None)
-    dp.register_callback_query_handler(next_page, lambda query: query.data.startswith("next:"), state=None)
+                                       state="*")
+    dp.register_callback_query_handler(next_page, lambda query: query.data.startswith("next:"), state='*')
     # Errors handlers
     dp.register_errors_handler(message_not_modified_handler, exception=MessageNotModified)
     # Unknown command
