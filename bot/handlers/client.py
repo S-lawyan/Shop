@@ -66,15 +66,15 @@ async def get_shop_name_to_fio(message: types.Message, state: FSMContext) -> Non
 
 async def get_fio_to_tg_id(message: types.Message, state: FSMContext) -> None:
     fio = message.text
-    if await utl.is_valid_name(name=fio):
-        async with state.proxy() as storage:
-            shop_name = storage["shop_name"]
-        tg_id = message.from_user.id
-        await es.save_trader(tg_id=tg_id, trader_name=shop_name, fio=fio)
-        await message.answer(text=glossary.get_phrase("reg_finish", fio=fio), reply_markup=admin_panel_main)
-        await state.finish()
-    else:
-        await message.answer(text=glossary.get_phrase("bad_fio"))
+    # if await utl.is_valid_name(name=fio):
+    async with state.proxy() as storage:
+        shop_name = storage["shop_name"]
+    tg_id = message.from_user.id
+    await es.save_trader(tg_id=tg_id, trader_name=shop_name, fio=fio)
+    await message.answer(text=glossary.get_phrase("reg_finish", fio=fio), reply_markup=admin_panel_main)
+    await state.finish()
+    # else:
+    #     await message.answer(text=glossary.get_phrase("bad_fio"))
 
 
 # Processing file
@@ -85,9 +85,11 @@ async def get_products_from_file(message: types.Message, state: FSMContext) -> N
 
 async def process_file(message: types.Message, state: FSMContext) -> None:
     products = []
-    file = await message.document.download()
-    async with aiofiles.open(file.name, mode='rb') as f:
-        file_content = io.BytesIO(await f.read())
+    file_content = io.BytesIO()
+    await message.document.download(destination_file=file_content)
+    # file = await message.document.download()
+    # async with aiofiles.open(file.name, mode='rb') as f:
+    #     file_content = io.BytesIO(await f.read())
     wb = openpyxl.load_workbook(file_content)
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2, values_only=True):

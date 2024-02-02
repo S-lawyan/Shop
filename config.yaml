@@ -7,12 +7,12 @@ bot:
   per_page: 5
 
 es:
-  es_host: "192.168.197.128"
+  es_host: "31.129.102.101"
   es_port: 9200
   es_user: "elastic"
   es_pass: "321"
   es_connections_limit: 50
   connection_attempt: 13
-  products: "products-2024.01.27-000001"
-  traders: "traders-2024.01.27-000001"
-  consumers: "consumers-2024.01.27-000001"
+  products: "products-2024.02.02-000001"
+  traders: "traders-2024.02.02-000001"
+  consumers: "consumers-2024.02.02-000001"
