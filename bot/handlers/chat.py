@@ -15,24 +15,26 @@ from bot.service import dp, bot, es, redis
 
 @dp.message_handler(IsGroup(), content_types=types.ContentType.TEXT, state='*')
 async def query_messages(message: types.Message, state: FSMContext):
-    request = str(message.text)
-    # products_poll: list[Product] = await get_products_poll_from_storage(request=request)
-    products_poll: list[Product] = await es.execute_query(request=request)
-    if len(products_poll) == 0:
-        await bot.send_message(
-            chat_id=message.from_user.id,
-            text=glossary.get_phrase("no_data_on_request"),
-        )
-    else:
-        total_pages: int = math.ceil(len(products_poll) / int(config.bot.per_page))
-        message_text = await send_products_list(products_list=products_poll)
-        personal_message = await bot.send_message(
-            chat_id=message.from_user.id,
-            text=message_text,
-            reply_markup=await pagination(total_pages=total_pages),
-        )
-        # Сохраняется конкретный pool для конкретного сообщения
-        await redis.set_data(key=f"{message.from_user.id}:{personal_message.message_id}", value=request, ttl=5)  # 720
+    message_text: str = str(message.text)
+    requests: list = message_text.split("\n")
+    for request in requests:
+        # products_poll: list[Product] = await get_products_poll_from_storage(request=request)
+        products_poll: list[Product] = await es.execute_query(request=request)
+        if len(products_poll) == 0:
+            await bot.send_message(
+                chat_id=message.from_user.id,
+                text=glossary.get_phrase("no_data_on_request"),
+            )
+        else:
+            total_pages: int = math.ceil(len(products_poll) / int(config.bot.per_page))
+            message_text = await send_products_list(products_list=products_poll)
+            personal_message = await bot.send_message(
+                chat_id=message.from_user.id,
+                text=message_text,
+                reply_markup=await pagination(total_pages=total_pages),
+            )
+            # Сохраняется конкретный pool для конкретного сообщения
+            await redis.set_data(key=f"{message.from_user.id}:{personal_message.message_id}", value=request, ttl=5)  # 720
 
 
 @dp.callback_query_handler(IsDirect(), lambda query: query.data.startswith("previous:"), state=None)
