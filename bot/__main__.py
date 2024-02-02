@@ -2,7 +2,7 @@ import asyncio
 
 from loguru import logger
 from bot.service import BotService
-from config import config
+from bot.config import config
 from database.storage import es
 
 
