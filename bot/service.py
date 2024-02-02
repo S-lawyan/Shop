@@ -1,7 +1,7 @@
 from aiogram.dispatcher import Dispatcher
 from aiogram import Bot, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from config import config
+from bot.config import config
 from database.es_storage import DataBaseService
 from database.redis_storage import RedisStorage
 
