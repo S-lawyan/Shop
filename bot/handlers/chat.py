@@ -19,7 +19,7 @@ async def query_messages(message: types.Message, state: FSMContext):
     requests: list = message_text.split("\n")
     for request in requests:
         # products_poll: list[Product] = await get_products_poll_from_storage(request=request)
-        products_poll: list[Product] = await es.execute_query(request=request)
+        products_poll: list[Product] = await es.search_products_poll(request=request)
         if len(products_poll) == 0:
             await bot.send_message(
                 chat_id=message.from_user.id,
@@ -43,7 +43,7 @@ async def previous_page(call: types.CallbackQuery, state: FSMContext):
     # products_poll: list[Product] = await get_products_poll_from_cash(key=f"{call.message.chat.id}:{call.message.message_id}")
     request: str = await redis.get_data(key=f"{call.message.chat.id}:{call.message.message_id}")
     if request:
-        products_poll: list[Product] = await es.execute_query(request=request)
+        products_poll: list[Product] = await es.search_products_poll(request=request)
         total_pages: int = math.ceil(len(products_poll) / int(config.bot.per_page))
         page = int(call.data.split(":")[1]) - 1 if int(call.data.split(":")[1]) > 0 else 0
         message_text = await send_products_list(products_list=products_poll, page=page)
@@ -67,7 +67,7 @@ async def next_page(call: types.CallbackQuery, state: FSMContext):
     # products_poll: list[Product] = await get_products_poll_from_cash(key=f"{call.message.chat.id}:{call.message.message_id}")
     request: str = await redis.get_data(key=f"{call.message.chat.id}:{call.message.message_id}")
     if request:
-        products_poll: list[Product] = await es.execute_query(request=request)
+        products_poll: list[Product] = await es.search_products_poll(request=request)
         total_pages: int = math.ceil(len(products_poll) / int(config.bot.per_page))
         page = int(call.data.split(":")[1]) + 1 if int(call.data.split(":")[1]) < (total_pages-1) else (total_pages-1)
         message_text = await send_products_list(products_list=products_poll, page=page)

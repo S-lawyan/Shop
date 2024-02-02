@@ -7,6 +7,7 @@ from bot.utils.exceptions import ErrorExecutingESQuery
 from bot.utils.models import Product
 
 from elasticsearch import AsyncElasticsearch
+from elasticsearch.helpers import async_scan
 
 
 class DataBaseService:
@@ -49,7 +50,14 @@ class DataBaseService:
     async def search_es_query(self, index: str, query: dict = None):
         try:
             async with await self._get_elastic_instance() as elastic:
-                result = await elastic.search(index=index, body=query)
+                # result = await elastic.search(index=index, body=query)
+                result = []
+                async for doc in async_scan(
+                    client=elastic,
+                    index=index,
+                    query=query,
+                ):
+                    result.append(doc)
                 return result
         except Exception as exc:
             logger.error(f"Ошибка при поиске {index} запрос {query} : {exc}")
@@ -96,10 +104,10 @@ class DataBaseService:
         :return:
         """
         query = {"query": {"term": {field: value}}}  # term - потому что нужно точное совпадение
-        response = await self.search_es_query(index=self.consumer_index, query=query)
-        return True if len(response["hits"]["hits"]) > 0 else False
+        response: list = await self.search_es_query(index=self.consumer_index, query=query)
+        return True if len(response) > 0 else False
 
-    async def execute_query(self, request: str):
+    async def search_products_poll(self, request: str):
         # query: dict = {
         #     "query": {
         #         "match": {
@@ -121,7 +129,7 @@ class DataBaseService:
             "size": 200
         }
         response = await self.search_es_query(index=self.products_index, query=query)
-        documents = await _pars_products(response=response["hits"]["hits"])
+        documents = await _pars_products(response=response)
         return documents
 
 

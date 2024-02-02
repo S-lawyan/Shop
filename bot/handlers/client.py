@@ -51,20 +51,20 @@ async def start_registration(call: types.CallbackQuery) -> None:
 @dp.message_handler(IsDirect(), content_types=types.ContentType.TEXT, state=TraderStates.get_fio)
 async def get_fio_finish_registration(message: types.Message, state: FSMContext) -> None:
     fio = message.text
-    if await utl.is_valid_name(name=fio):
-        tg_id = message.from_user.id
-        await es.save_consumer(tg_id=tg_id, fio=fio)
-        await message.answer(
-            text=glossary.get_phrase(
-                "reg_finish",
-                fio=fio,
-                url=config.bot.channel_url,
-            ),
-            reply_markup=consumer_panel_main,
-        )
-        await state.finish()
-    else:
-        await message.answer(text=glossary.get_phrase("bad_fio"))
+    # if await utl.is_valid_name(name=fio):
+    tg_id = message.from_user.id
+    await es.save_consumer(tg_id=tg_id, fio=fio)
+    await message.answer(
+        text=glossary.get_phrase(
+            "reg_finish",
+            fio=fio,
+            url=config.bot.channel_url,
+        ),
+        reply_markup=consumer_panel_main,
+    )
+    await state.finish()
+    # else:
+    #     await message.answer(text=glossary.get_phrase("bad_fio"))
 
 
 @dp.message_handler(IsDirect(), content_types=types.ContentType.ANY, state=None)
