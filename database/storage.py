@@ -47,8 +47,6 @@ class DataBaseService:
         except Exception as exc:
             logger.error(f"Ошибка при индексации документа {index} значение {document_data} : {exc}")
             raise ErrorExecutingESQuery()
-        finally:
-            await elastic.close()
 
     async def search_es_query(self, index: str, query: dict = None):
         try:
@@ -65,8 +63,6 @@ class DataBaseService:
         except Exception as exc:
             logger.error(f"Ошибка при поиске {index} запрос {query} : {exc}")
             raise ErrorExecutingESQuery()
-        finally:
-            await elastic.close()
 
     async def delete_es_query(self, index: str, document_data: dict):
         try:
@@ -76,8 +72,6 @@ class DataBaseService:
         except Exception as exc:
             logger.error(f"Ошибка при удалении {index} значение {document_data} : {exc}")
             raise ErrorExecutingESQuery()
-        finally:
-            await elastic.close()
 
     async def update_es_query(self, index: str, doc_id: str, document_data: dict):
         try:
@@ -87,8 +81,6 @@ class DataBaseService:
         except Exception as exc:
             logger.error(f"Ошибка при обновлении поля {index} значение {document_data} : {exc}")
             raise ErrorExecutingESQuery()
-        finally:
-            await elastic.close()
 
     # Other methods
 
@@ -224,18 +216,16 @@ class DataBaseService:
                         }
                     }
                 )
-            elastic: AsyncElasticsearch = await self._get_elastic_instance()
-            success, failed = await async_bulk(
-                client=elastic,
-                index="products_alias",
-                actions=actions
-            )
-            # TODO посмотреть что возвращает список, возможно получится разделить успешные и неуспешные строки
-            logger.info(f"Успешно проиндексировано документов : {len(products)}")
+            async with await self._get_elastic_instance() as elastic:
+                success, failed = await async_bulk(
+                    client=elastic,
+                    index="products_alias",
+                    actions=actions
+                )
+                # TODO посмотреть что возвращает список, возможно получится разделить успешные и неуспешные строки
+                logger.info(f"Успешно проиндексировано документов : {success}, ошибочно: {failed}")
         except (Exception,) as exc:
             logger.error(f"Ошибка добавление позиций bulk : {exc}")
-        finally:
-            await elastic.close()
 
 
 async def pars_products(response: list[dict]) -> list[Product]:

@@ -85,26 +85,30 @@ async def get_products_from_file(message: types.Message, state: FSMContext) -> N
 
 async def process_file(message: types.Message, state: FSMContext) -> None:
     products = []
+    field_rows = []
     file_content = io.BytesIO()
     await message.document.download(destination_file=file_content)
-    # file = await message.document.download()
-    # async with aiofiles.open(file.name, mode='rb') as f:
-    #     file_content = io.BytesIO(await f.read())
     wb = openpyxl.load_workbook(file_content)
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2, values_only=True):
-        product = Product()
-        product.product_name = row[0]
-        product.price = float(row[1])
-        if int(row[2]) == 0:
-            product.quantity = None
-        else:
-            product.quantity = int(row[2])
-        product.trader_id = int(message.from_user.id)
-        product.article = await utl.generate_article()
-        products.append(product)
+        try:
+            product = Product()
+            product.product_name = row[0]
+            product.price = float(row[1])
+            if int(row[2]) == 0:
+                product.quantity = None
+            else:
+                product.quantity = int(row[2])
+            product.trader_id = int(message.from_user.id)
+            product.article = await utl.generate_article()
+            products.append(product)
+        except (Exception,) as exc:
+            field_rows.append(row)
+            continue
     await es.save_bulk_products(products=products)
     await message.answer(glossary.get_phrase("success_insert_price", correct_rows=len(products)))
+    msg = await utl.generate_message_with_uncorrected_rows(rows=field_rows)
+    await message.answer(text=msg)
     await state.finish()
 
 

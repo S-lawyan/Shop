@@ -83,5 +83,8 @@ async def generate_page_product(products: list[Product]) -> str:
 async def generate_message_with_uncorrected_rows(rows: list):
     message: str = """Некорректные строки:\n\n"""
     for row in rows:
-        message += row+"\n"
+        if isinstance(row, tuple):
+            message += ' - '.join(map(str, row)) + "\n"
+        else:
+            message += row+"\n"
     return message
