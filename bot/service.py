@@ -13,7 +13,7 @@ class BotService:
 
     async def start_bot(self) -> None:
         await self.dp.skip_updates()
-        # admin.register_handlers_admin(self.dp)
+        await self.set_default_settings_bot()
         client.register_handlers_client(self.dp)
         admin_panel.register_handlers_admin_panel(self.dp)
         logger.warning("The bot is running!")
@@ -21,3 +21,15 @@ class BotService:
 
     async def stop_bot(self) -> None:
         self.dp.stop_polling()
+
+    async def set_default_settings_bot(self):
+        await self.dp.bot.set_my_commands(
+            [
+                types.BotCommand("start", "Запустить бота"),
+                types.BotCommand("menu", "Меню продавца"),
+                types.BotCommand("list", "Список позиций"),
+                types.BotCommand("file", "Загрузить файлом"),
+                types.BotCommand("price", "Загрузить прайс-лист"),
+                types.BotCommand("help", "Помощь"),
+            ]
+        )

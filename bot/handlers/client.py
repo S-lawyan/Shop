@@ -1,6 +1,5 @@
 import io
 
-import aiofiles
 import openpyxl
 from aiogram import types
 from aiogram import Dispatcher
