@@ -5,6 +5,17 @@ from bot.service import redis
 from aiogram import executor
 from bot import filters
 import bot.handlers
+from aiogram import types
+
+
+async def set_default_settings_bot(dp):
+    await dp.bot.set_my_commands(
+        [
+            types.BotCommand("start", "Запустить бота"),
+            types.BotCommand("chat", "Ссылка на чат"),
+            types.BotCommand("help", "Помощь"),
+        ]
+    )
 
 
 async def on_startup(dp):
@@ -16,6 +27,7 @@ async def on_startup(dp):
         compression="zip",
         level="DEBUG",
     )
+    await set_default_settings_bot(dp=dp)
     await redis.create()
     await es.es_healthcheck()
     logger.warning("The bot is started!")

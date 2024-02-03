@@ -14,7 +14,7 @@ from bot.service import dp, bot, es, redis
 
 
 @dp.message_handler(IsGroup(), content_types=types.ContentType.TEXT, state='*')
-async def query_messages(message: types.Message, state: FSMContext):
+async def query_messages(message: types.Message):
     message_text: str = str(message.text)
     requests: list = message_text.split("\n")
     for request in requests:
@@ -38,7 +38,7 @@ async def query_messages(message: types.Message, state: FSMContext):
 
 
 @dp.callback_query_handler(IsDirect(), lambda query: query.data.startswith("previous:"), state=None)
-async def previous_page(call: types.CallbackQuery, state: FSMContext):
+async def previous_page(call: types.CallbackQuery):
     # Redis
     # products_poll: list[Product] = await get_products_poll_from_cash(key=f"{call.message.chat.id}:{call.message.message_id}")
     request: str = await redis.get_data(key=f"{call.message.chat.id}:{call.message.message_id}")
@@ -62,7 +62,7 @@ async def previous_page(call: types.CallbackQuery, state: FSMContext):
 
 
 @dp.callback_query_handler(IsDirect(), lambda query: query.data.startswith("next:"), state=None)
-async def next_page(call: types.CallbackQuery, state: FSMContext):
+async def next_page(call: types.CallbackQuery):
     # Redis
     # products_poll: list[Product] = await get_products_poll_from_cash(key=f"{call.message.chat.id}:{call.message.message_id}")
     request: str = await redis.get_data(key=f"{call.message.chat.id}:{call.message.message_id}")

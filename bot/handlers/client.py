@@ -37,7 +37,10 @@ async def command_help_message(message: types.Message) -> None:
 @dp.message_handler(IsDirect(), commands=["chat"], state='*')
 @dp.message_handler(IsDirect(), Text(startswith="чат", ignore_case=True), state='*')
 async def get_chat_link(message: types.Message) -> None:
-    await message.answer(text=glossary.get_phrase("chat_link"), reply_markup=chat_link_kb)
+    if await es.check_in_consumers_index(field="tg_id", value=int(message.from_user.id)):
+        await message.answer(text=glossary.get_phrase("chat_link"), reply_markup=chat_link_kb)
+    else:
+        await message.answer(text=glossary.get_phrase("non_register_user"), reply_markup=kb_registration)
 
 
 # ================= БЛОК РЕГИСТРАЦИИ НОВОГО CONSUMER-a ==============================
