@@ -1,0 +1,8 @@
+version: '3.7'
+services:
+  app:
+    image: trader
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    command: python -m bot
+    restart: always
