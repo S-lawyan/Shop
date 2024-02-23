@@ -1,4 +1,3 @@
-# docker exec -it redis redis-cli
 from bot.config import Settings
 import aioredis
 import json
@@ -33,13 +32,6 @@ class RedisStorage:
             _response = await self.redis.get(key)
             _response = _response.decode('utf-8')
             return _response
-            # if _response:
-            #     response = json.loads(_response)
-            #     products_pool: list[Product] = await _pars_json_products(response=response)
-            #     logger.info(f"Успешное получение данных из Redis: {response}")
-            #     return products_pool
-            # else:
-            #     return _response
         except (Exception,) as e:
             logger.error(f"Ошибка получения данных {key} из Redis: {e}")
 
@@ -61,7 +53,6 @@ def _pars_json_product(product: dict) -> Product:
     _product = Product()
     _product.product_name = str(product["product_name"])
     _product.price = float(product["price"])
-    _product.quantity = int(product["quantity"])
     _product.article = int(product["article"])
     _product.trader_id = int(product["trader_id"])
     return _product

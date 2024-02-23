@@ -29,6 +29,6 @@ async def generate_page_product(products: list[Product]) -> str:
     for product in products:
         # user = await bot.get_chat(telegram_id)
         # username = user.username
-        line = f"""🔹<b>{product.product_name}</b>\nЦена: <b>{product.price} ₽</b>\nКоличество: <b>{product.quantity}</b>\nАртикул: <code>{product.article}</code>\n<a href="tg://user?id={product.trader_id}">Написать продавцу</a>\n\n"""
+        line = f"""{product.product_name} - {product.price}\n(<code>{product.article}</code>) <a href="tg://user?id={product.trader_id}">Написать продавцу</a>\n\n"""
         message += line
     return message

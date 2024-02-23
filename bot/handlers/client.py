@@ -3,7 +3,6 @@ from aiogram.dispatcher import FSMContext
 from bot.glossaries.glossary import glossary
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from bot.keyboards.client_kb import *
-from bot.utils import utilities as utl
 from aiogram.dispatcher.filters import Text
 from bot.service import dp, es
 from bot.filters import IsDirect
@@ -16,6 +15,8 @@ class TraderStates(StatesGroup):
 # ================= БЛОК ОСНОВНЫХ КОМАНД БОТА ==============================
 @dp.message_handler(commands=["start"], state=None)
 async def command_start(message: types.Message) -> None:
+    if message.chat.id == -4126813172:
+        return
     if await es.check_in_consumers_index(field="tg_id", value=int(message.from_user.id)):
         await message.answer(text=glossary.get_phrase("consumer_main_menu"), reply_markup=consumer_panel_main)
     else:

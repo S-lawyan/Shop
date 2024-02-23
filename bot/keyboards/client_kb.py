@@ -6,14 +6,13 @@ kb_registration = InlineKeyboardMarkup()
 kb_registration.add(InlineKeyboardButton(text="Погнали!", callback_data='registration'))
 
 
-# edit_name = KeyboardButton(text="Изменить имя 👤", command='edit_name')
 get_chat = KeyboardButton(text="Чат 💬", command='get_chat')
 btn_help = KeyboardButton(text="Помощь 🆘", command='help')
 consumer_panel_main = ReplyKeyboardMarkup(resize_keyboard=True).add(get_chat, btn_help)
 
 
 chat_link_kb = InlineKeyboardMarkup()
-chat_link_kb.add(InlineKeyboardButton(text="Чат для заявок 💬", url=config.bot.channel_url))
+chat_link_kb.add(InlineKeyboardButton(text="Чат с админом 💬", url=config.bot.channel_url))
 
 
 async def pagination(total_pages: int, page: int = 0):

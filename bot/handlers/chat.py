@@ -1,5 +1,4 @@
 from aiogram import types
-from aiogram.dispatcher import FSMContext
 from aiogram.utils.exceptions import MessageNotModified
 
 from bot.utils.models import Product
@@ -90,23 +89,6 @@ async def message_not_modified_handler(update: types.Update, error):
     await update.callback_query.answer()
     logger.error(error)
     return True
-
-
-# async def get_products_poll_from_storage(request: str) -> list[Product]:
-#     pool_from_cash: list[Product] = await redis.get_data(key=request)
-#     if pool_from_cash is not None:
-#         # Запись есть в кеше, возвращаем оттуда
-#         return pool_from_cash
-#     else:
-#         # Записи нет в кеше - получение из es
-#         pool_from_es: list[Product] = await es.execute_query(request=request)
-#         # TODO ЧТО ЕСЛИ СПИСОК ТОВАРОВ ПУСТ ????
-#         await redis.set_data(key=request, value=pool_from_es, ttl=15)
-#         return pool_from_es
-
-
-# async def get_products_poll_from_cash(key: str) -> list:
-#     return await redis.get_data(key=key)
 
 
 async def send_products_list(products_list: list[Product], page: int = 0) -> str:

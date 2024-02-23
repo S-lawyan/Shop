@@ -50,7 +50,6 @@ class DataBaseService:
     async def search_es_query(self, index: str, query: dict = None):
         try:
             async with await self._get_elastic_instance() as elastic:
-                # result = await elastic.search(index=index, body=query)
                 result = []
                 async for doc in async_scan(
                     client=elastic,
@@ -82,7 +81,6 @@ class DataBaseService:
             raise ErrorExecutingESQuery()
 
     # Other methods
-
     async def save_consumer(self, tg_id: int, fio: str) -> None:
         """
 
@@ -108,16 +106,6 @@ class DataBaseService:
         return True if len(response) > 0 else False
 
     async def search_products_poll(self, request: str):
-        # query: dict = {
-        #     "query": {
-        #         "match": {
-        #             "product_name": {
-        #                 "query": f"{request}",
-        #                 "analyzer": "product_name_analizer"
-        #             }
-        #         }
-        #     }
-        # }
         query: dict = {
             "query": {
                 "query_string": {
@@ -142,7 +130,6 @@ def _pars_product(product: dict) -> Product:
     source: dict = product["_source"]
     _product.product_name = str(source["product_name"])
     _product.price = float(source["price"])
-    _product.quantity = int(source["count"]) if source.get("count", None) is not None else "♾"
     _product.article = int(source["article"])
     _product.trader_id = int(source["trader_id"])
     return _product
