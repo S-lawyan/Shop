@@ -51,7 +51,6 @@ class DataBaseService:
     async def search_es_query(self, index: str, query: dict = None):
         try:
             async with await self._get_elastic_instance() as elastic:
-                # result = await elastic.search(index=index, body=query)
                 result = []
                 async for doc in async_scan(
                     client=elastic,
@@ -129,7 +128,6 @@ class DataBaseService:
         """
         document_data = {
             "article": product.article,
-            "count": product.quantity,
             "price": product.price,
             "product_name": product.product_name,
             "trader_id": product.trader_id
@@ -138,7 +136,7 @@ class DataBaseService:
         logger.info(
             f"""
             Пользователем {product.trader_id} добавлен новый товар\n{product.article}\n
-            {product.product_name}\n{product.price}\n{product.quantity}
+            {product.product_name}\n{product.price}
             """
         )
 
@@ -184,23 +182,11 @@ class DataBaseService:
         documents = await pars_products(response=response)
         return documents
 
-    # async def save_bulk_products(self, products: list[Product]) -> None:
-    #     try:
-    #         for product in products:
-    #             document_data = {
-    #                 "product_name": product.product_name,
-    #                 "price": product.price,
-    #                 "article": product.article,
-    #                 "count": product.quantity,
-    #                 "trader_id": product.trader_id
-    #             }
-    #             await self.indexing_es_query(index=self.products_index, document_data=document_data)
-    #         logger.info(f"Успешно проиндексировано документов : {len(products)}")
-    #     except (Exception,) as exc:
-    #         logger.error(f"Ошибка добавление позиций bulk : {exc}")
 
-    async def save_bulk_products(self, products: list[Product]) -> None:
+    async def save_bulk_products(self, products: list[Product], delete_flag: bool) -> None:
         try:
+            if delete_flag:
+                await self.delete_all_user_products(trader_id=products[0].trader_id)
             actions: list = []
             for product in products:
                 actions.append(
@@ -211,7 +197,6 @@ class DataBaseService:
                             "product_name": product.product_name,
                             "price": product.price,
                             "article": product.article,
-                            "count": product.quantity,
                             "trader_id": product.trader_id
                         }
                     }
@@ -227,6 +212,13 @@ class DataBaseService:
         except (Exception,) as exc:
             logger.error(f"Ошибка добавление позиций bulk : {exc}")
 
+    async def delete_all_user_products(self, trader_id: int) -> None:
+        document_data = {
+            "trader_id": trader_id,
+        }
+        await self.delete_es_query(index=self.products_index, document_data=document_data)
+        logger.info(f"Товар пользователя {trader_id} удалены.")
+
 
 async def pars_products(response: list[dict]) -> list[Product]:
     return [pars_product(product) for product in response]
@@ -237,7 +229,6 @@ def pars_product(product: dict) -> Product:
     source: dict = product["_source"]
     _product.product_name = str(source["product_name"])
     _product.price = float(source["price"])
-    _product.quantity = int(source["count"]) if source.get("count", None) is not None else "♾"
     _product.article = int(source["article"])
     _product.trader_id = int(source["trader_id"])
     return _product

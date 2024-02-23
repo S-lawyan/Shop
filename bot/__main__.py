@@ -4,8 +4,6 @@ from loguru import logger
 from bot.service import BotService
 from bot.config import config
 from database.storage import es
-from aiogram import types
-
 
 
 async def main():

@@ -1,16 +1,16 @@
 bot:
   # client-token
-  bot_token: "6702886936:AAFWrJHETDD09lkeRjft_L5JntzRWC4P93E"
+  bot_token: "5916203690:AAE9AX2zGXy-lnJ6uKsgXYLGt4heqd1J3fs"
   # client-channel-id
-  channel_id: -1001901707923
+  channel_id: -4126813172
   # количество товаров в одном сообщении
-  per_page: 5
+  per_page: 15
 
 es:
   es_host: "31.129.102.101"
   es_port: 9200
   es_user: "elastic"
-  es_pass: "321"
+  es_pass: "Dkflbvbh-208-Ifvfyjd"
   es_connections_limit: 50
   connection_attempt: 13
   products: "products_alias"

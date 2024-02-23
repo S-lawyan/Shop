@@ -23,8 +23,6 @@ async def is_valid_name(name: str):
 
 
 async def is_valid_price(price: str):
-    # symbols_list = [char for char in price if char.isnumeric()]
-    # _clear_price = ''.join(symbols_list)
     _clear_price = float(price)
     return _clear_price
 
@@ -62,7 +60,6 @@ async def preprocessing_price_list(price_list: str, trader: int):
         try:
             _product.product_name = str(_row[0].strip())
             _product.price = float(_row[1].strip().replace(".", "").replace(",", ""))
-            _product.quantity = int(_row[2].strip()) if int(_row[2].strip()) != 0 else None
             _product.article = await generate_article()
             _product.trader_id = int(trader)
             products_correct.append(_product)
@@ -75,7 +72,7 @@ async def preprocessing_price_list(price_list: str, trader: int):
 async def generate_page_product(products: list[Product]) -> str:
     message: str = "<u>📋 Список товаров</u>:\n\n"
     for product in products:
-        line = f"""🔹<b>{product.product_name}</b>\nЦена: <b>{product.price} ₽</b>\nКоличество: <b>{product.quantity}</b>\nАртикул: <code>{product.article}</code>\n\n"""
+        line = f"""{product.product_name} - {product.price}\n(<code>{product.article}</code>)\n\n"""
         message += line
     return message
 

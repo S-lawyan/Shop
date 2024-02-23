@@ -20,14 +20,11 @@ from aiogram.dispatcher.filters import Text
 
 class TraderStates(StatesGroup):
     # Manage products list
-    get_product_name = State()
-    get_price = State()
-    get_quantity = State()
+    get_one_product = State()
     delete_product = State()
     edit_product = State()
     editing_product = State()
     wait_price = State()
-    wait_count = State()
 
 
 # ================= ПАНЕЛЬ АДМИНИСТРАТОРА ==============================
@@ -38,47 +35,20 @@ async def show_admin_panel_message(message: types.Message) -> None:
 
 # Adding the product
 async def add_product(message: types.Message):
-    await message.answer(text=glossary.get_phrase("get_product_name"), reply_markup=kb_cancel)
-    await TraderStates.get_product_name.set()
+    await message.answer(text=glossary.get_phrase("get_one_product"), reply_markup=kb_cancel)
+    await TraderStates.get_one_product.set()
 
 
 async def product_name_to_price(message: types.Message, state: FSMContext):
-    product = Product()
-    product.product_name = message.text
-    await message.answer(text=glossary.get_phrase("get_price"), reply_markup=kb_cancel)
-    await state.update_data(product=product)
-    # await update_data(key="product", data=product, state=state)
-    await TraderStates.get_price.set()
-
-
-async def price_to_quantity(message: types.Message, state: FSMContext):
-    product: Product = await get_data(key="product", state=state)
-    try:
-        product.price = await utl.is_valid_price(price=message.text)
-        await state.update_data(product=product)
-        await message.answer(text=glossary.get_phrase("get_quantity"))
-        await TraderStates.get_quantity.set()
-    except Exception as exc:
-        logger.error(f"Ошибка при вводе цены товара : {exc}")
-        await message.answer(text=glossary.get_phrase("uncorrected_enter"))
-
-
-async def quantity_to_finish(message: types.Message, state: FSMContext):
-    product: Product = await get_data(key="product", state=state)
-    try:
-        product.quantity = await utl.is_valid_quantity(quantity=message.text)
-        article = await utl.generate_article()
-        product.article = article
-        product.trader_id = message.from_user.id
-        await es.save_product(product=product)
+    product_text = message.text
+    products, uncorrected_rows = await utl.preprocessing_price_list(price_list=product_text, trader=message.from_user.id)
+    if len(uncorrected_rows) != 0:
+        await message.answer("Некорректный ввод позиции, соблюдайте формат")
+    else:
+        await es.save_bulk_products(products=products, delete_flag=False)
+        await message.answer(text=glossary.get_phrase("success_insert_price", correct_rows=len(products)),
+                             reply_markup=admin_panel_main)
         await state.finish()
-        await message.answer(
-            text=glossary.get_phrase("product_is_added", article=article),
-            reply_markup=admin_panel_main
-        )
-    except Exception as exc:
-        logger.error(f"Ошибка при вводе количества товара : {exc}")
-        await message.answer(text=glossary.get_phrase("uncorrected_enter"))
 
 
 # Deleting the product
@@ -139,19 +109,6 @@ async def editing_new_price(message: types.Message, state: TraderStates.wait_pri
         new_price = float(message.text)
         await es.update_product_document(article=article, update_field="price", update_value=new_price)
         await message.answer(text=glossary.get_phrase("success_update_price"), reply_markup=admin_panel_main)
-        await state.finish()
-    except DocumentIsNotExist:
-        await message.answer(text=glossary.get_phrase("updating_errors"), reply_markup=kb_cancel)
-    except (Exception,):
-        await message.answer(text=glossary.get_phrase("uncorrected_enter"), reply_markup=kb_cancel)
-
-
-async def editing_new_count(message: types.Message, state: TraderStates.wait_count):
-    article: int = await get_data(key="article", state=state)
-    try:
-        new_count = int(message.text)
-        await es.update_product_document(article=article, update_field="count", update_value=new_count)
-        await message.answer(text=glossary.get_phrase("success_update_count"), reply_markup=admin_panel_main)
         await state.finish()
     except DocumentIsNotExist:
         await message.answer(text=glossary.get_phrase("updating_errors"), reply_markup=kb_cancel)
@@ -233,11 +190,7 @@ def register_handlers_admin_panel(dp: Dispatcher):
     dp.register_message_handler(add_product, commands=["add"], state=None)
     dp.register_message_handler(add_product, Text(equals='Добавить 1 позицию'), state=None)
     dp.register_message_handler(product_name_to_price, content_types=types.ContentType.TEXT,
-                                state=TraderStates.get_product_name)
-    dp.register_message_handler(price_to_quantity, content_types=types.ContentType.TEXT,
-                                state=TraderStates.get_price)
-    dp.register_message_handler(quantity_to_finish, content_types=types.ContentType.TEXT,
-                                state=TraderStates.get_quantity)
+                                state=TraderStates.get_one_product)
     # Deleting product
     dp.register_message_handler(delete_product, commands=["dell"], state=None)
     dp.register_message_handler(delete_product, Text(equals='Удалить позицию'), state=None)
@@ -251,11 +204,8 @@ def register_handlers_admin_panel(dp: Dispatcher):
     dp.register_message_handler(get_article_for_editing, content_types=types.ContentType.TEXT,
                                 state=TraderStates.edit_product)
     dp.register_message_handler(editing, Text(equals='Изменить цену'), state=TraderStates.editing_product)
-    dp.register_message_handler(editing, Text(equals='Изменить количество'), state=TraderStates.editing_product)
     dp.register_message_handler(editing_new_price, content_types=types.ContentType.TEXT,
                                 state=TraderStates.wait_price)
-    dp.register_message_handler(editing_new_count, content_types=types.ContentType.TEXT,
-                                state=TraderStates.wait_count)
     # Vising product list
     dp.register_message_handler(show_products_list, commands=["list"], state=None)
     dp.register_message_handler(show_products_list, Text(startswith='Список позиций'), state=None)
