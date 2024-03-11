@@ -50,11 +50,21 @@ class DataBaseService:
     async def search_es_query(self, index: str, query: dict = None):
         try:
             async with await self._get_elastic_instance() as elastic:
+                # response = await elastic.search(
+                #     index=index,
+                #     body=query,
+                #     size=200
+                # )
+                # result: list = response['hits']['hits']
+                # preserve_order=True - В док-ии написано использовать с осторожностью,
+                # так как может привести к непредсказуемым последствиям.
+                # Сверху стабильный вариант.
                 result = []
                 async for doc in async_scan(
                     client=elastic,
                     index=index,
                     query=query,
+                    preserve_order=True
                 ):
                     result.append(doc)
                 return result
@@ -113,8 +123,7 @@ class DataBaseService:
                     "default_operator": "AND",
                     "query": request
                 }
-            },
-            "size": 200
+            }
         }
         response = await self.search_es_query(index=self.products_index, query=query)
         documents = await _pars_products(response=response)
